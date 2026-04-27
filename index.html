@@ -161,9 +161,16 @@
                 return;
             }
 
-            const baseUrl = (type === 'web') ? "https://web.whatsapp.com/send" : "https://wa.me";
-            const link = `${baseUrl}?phone=55${data.ddd}${cleanNum}&text=${msgEncoded}`;
-            window.open(link, '_blank');
+            if (type === 'app') {
+                // Protocolo para abrir o aplicativo do WhatsApp no computador
+                const link = `whatsapp://send?phone=55${data.ddd}${cleanNum}&text=${msgEncoded}`;
+                // _self evita que o navegador deixe uma aba em branco aberta após chamar o app
+                window.open(link, '_self'); 
+            } else {
+                // Protocolo alternativo web (não usado agora, mas mantido por segurança)
+                const link = `https://web.whatsapp.com/send?phone=55${data.ddd}${cleanNum}&text=${msgEncoded}`;
+                window.open(link, '_blank');
+            }
         };
 
         window.copiar = (id) => {
@@ -228,9 +235,9 @@
                                     </div>
                                 </div>
                                 <div class="space-y-2">
-                                    <button onclick="disparar(${id}, 'web')" 
-                                        class="w-full bg-[#128C7E] hover:bg-[#075e54] text-white font-black py-4 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest">
-                                        WhatsApp Web
+                                    <button onclick="disparar(${id}, 'app')" 
+                                        class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-4 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest">
+                                        WhatsApp App
                                     </button>
                                     <button id="btn-copy-${id}" onclick="copiar(${id})" 
                                         class="w-full border-2 border-slate-200 hover:border-sky-400 hover:text-sky-600 text-slate-400 font-black py-3 rounded-xl transition-all active:scale-95 uppercase text-[9px] tracking-widest">
