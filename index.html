@@ -188,7 +188,7 @@
             window.btnFont = fontClass;
             window.persistAll();
             renderAllBricks();
-            updateStaticButtons();
+            window.updateStaticButtons();
             window.showToast("Fonte dos botões atualizada!");
         };
 
@@ -196,17 +196,15 @@
             window.btnShape = shapeClass;
             window.persistAll();
             renderAllBricks();
-            updateStaticButtons();
+            window.updateStaticButtons();
             window.showToast("Formato dos botões atualizado!");
         };
 
         window.updateStaticButtons = () => {
             const quickBtn = document.getElementById('btn-quick-copy');
             if (quickBtn) {
-                // Remover classes antigas de fonte
                 quickBtn.classList.remove('font-sans', 'font-inter', 'font-poppins', 'font-roboto', 'font-montserrat');
                 quickBtn.classList.add(window.btnFont);
-                // Remover classes antigas de formato
                 quickBtn.classList.remove('rounded-xl', 'rounded-full', 'rounded-sm');
                 quickBtn.classList.add(window.btnShape);
             }
@@ -219,27 +217,42 @@
             let dddEl = document.getElementById(`ddd-${id}`);
             let numEl = document.getElementById(`num-${id}`);
             let val = numEl.value;
-            let digits = val.replace(/\D/g, ''); // Remove tudo o que não for número
+            let digits = val.replace(/\D/g, ''); // Limpa imediatamente letras e símbolos
 
-            // Se colou número do WhatsApp com o código de Portugal ou Brasil (+55)
+            // Identifica se o usuário colou com formatação (+, (), -, espaço)
+            let isPasteOrFormatted = val.includes('+') || val.includes('(') || val.includes(')') || val.includes('-') || val.includes(' ');
+
+            // Tira o código do Brasil se veio colado
             if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
                 digits = digits.substring(2);
+                isPasteOrFormatted = true;
             }
 
-            // Se tiver 10 ou 11 dígitos, o sistema separa o DDD e o Número
-            if (digits.length >= 10 && digits.length <= 11) {
+            // Se colou número inteiro com DDD e Número
+            if (isPasteOrFormatted && (digits.length >= 10 && digits.length <= 11)) {
                 let newDdd = digits.substring(0, 2);
                 let newNum = digits.substring(2);
 
-                if (newNum.length === 8) newNum = '9' + newNum; // Injeta o 9 automaticamente
+                // Só injeta o 9 se for um número de telemóvel antigo (começa por 7, 8 ou 9)
+                if (newNum.length === 8 && ['7', '8', '9'].includes(newNum[0])) {
+                    newNum = '9' + newNum; 
+                }
 
                 window.templates[id].ddd = newDdd;
                 window.templates[id].num = newNum;
-
                 dddEl.value = newDdd;
                 numEl.value = newNum;
-            } else {
-                window.templates[id].num = val; // Preserva a digitação orgânica
+            } 
+            // Se colou apenas o número antigo de 8 dígitos
+            else if (isPasteOrFormatted && digits.length === 8 && ['7', '8', '9'].includes(digits[0])) {
+                digits = '9' + digits;
+                window.templates[id].num = digits;
+                numEl.value = digits;
+            } 
+            // Digitação orgânica
+            else {
+                window.templates[id].num = digits;
+                numEl.value = digits; // Mantém no ecrã apenas os números limpos
             }
             window.persistAll();
         };
@@ -249,7 +262,6 @@
             let numEl = document.getElementById(`num-${id}`);
             let digits = numEl.value.replace(/\D/g, '');
 
-            // Trata as sobras caso a pessoa tenha clicado fora rápido demais após colar
             if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
                 digits = digits.substring(2);
             }
@@ -257,18 +269,18 @@
             if (digits.length === 10 || digits.length === 11) {
                 let newDdd = digits.substring(0, 2);
                 let newNum = digits.substring(2);
-                if (newNum.length === 8) newNum = '9' + newNum;
-                
+                if (newNum.length === 8 && ['7', '8', '9'].includes(newNum[0])) {
+                    newNum = '9' + newNum;
+                }
                 window.templates[id].ddd = newDdd;
                 dddEl.value = newDdd;
                 digits = newNum;
-            } else if (digits.length === 8) {
-                // Se a pessoa digitou apenas o número antigo, colocamos o 9
+            } else if (digits.length === 8 && ['7', '8', '9'].includes(digits[0])) {
                 digits = '9' + digits;
             }
 
             window.templates[id].num = digits;
-            numEl.value = digits; // Formata visualmente o campo sem espaços
+            numEl.value = digits; 
             window.persistAll();
         };
 
@@ -279,16 +291,31 @@
         const quickLinkOutput = document.getElementById('quick-link');
 
         quickNumberInput.addEventListener('input', (e) => {
-            let val = e.target.value.replace(/\D/g, ''); 
+            let val = e.target.value;
+            let digits = val.replace(/\D/g, ''); 
             
-            // Remove o código do país se tiver
-            if (val.startsWith('55') && (val.length === 12 || val.length === 13)) {
-                val = val.substring(2);
+            let isPasteOrFormatted = val.includes('+') || val.includes('(') || val.includes(')') || val.includes('-') || val.includes(' ');
+
+            if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
+                digits = digits.substring(2);
+                isPasteOrFormatted = true;
             }
             
-            e.target.value = val;
-            if (val.length > 0) {
-                quickLinkOutput.value = `https://wa.me/55${val}`;
+            if (isPasteOrFormatted) {
+                if (digits.length === 10) {
+                    let ddd = digits.substring(0, 2);
+                    let num = digits.substring(2);
+                    if (['7', '8', '9'].includes(num[0])) {
+                        digits = ddd + '9' + num;
+                    }
+                } else if (digits.length === 8 && ['7', '8', '9'].includes(digits[0])) {
+                    digits = '9' + digits;
+                }
+            }
+            
+            e.target.value = digits;
+            if (digits.length > 0) {
+                quickLinkOutput.value = `https://wa.me/55${digits}`;
             } else {
                 quickLinkOutput.value = '';
             }
@@ -301,13 +328,13 @@
                 val = val.substring(2);
             }
             
-            // Ajusta o 9 se tiver DDD e o número tiver apenas 8 dígitos (10 total)
             if (val.length === 10) {
                 let ddd = val.substring(0, 2);
                 let num = val.substring(2);
-                val = ddd + '9' + num;
-            } else if (val.length === 8) {
-                // Se for só o número, insere o 9
+                if (['7', '8', '9'].includes(num[0])) {
+                    val = ddd + '9' + num;
+                }
+            } else if (val.length === 8 && ['7', '8', '9'].includes(val[0])) {
                 val = '9' + val;
             }
             
@@ -431,8 +458,8 @@
             const data = window.templates[id];
             let cleanNum = data.num ? String(data.num).replace(/\D/g, '') : '';
             
-            // Garantia extra: se tentar disparar muito rápido e o número tiver só 8 dígitos, injeta o 9
-            if (cleanNum.length === 8) {
+            // Garantia absoluta: se chegar com 8 dígitos aqui (telemóvel), injeta o 9
+            if (cleanNum.length === 8 && ['7', '8', '9'].includes(cleanNum[0])) {
                 cleanNum = '9' + cleanNum;
             }
             
@@ -456,7 +483,8 @@
             const data = window.templates[id];
             let cleanNum = data.num ? String(data.num).replace(/\D/g, '') : '';
             
-            if (cleanNum.length === 8) {
+            // Garantia absoluta: se chegar com 8 dígitos aqui (telemóvel), injeta o 9
+            if (cleanNum.length === 8 && ['7', '8', '9'].includes(cleanNum[0])) {
                 cleanNum = '9' + cleanNum;
             }
             
@@ -537,6 +565,7 @@
             });
         };
 
+        window.updateStaticButtons();
         renderAllBricks();
         initAuth();
     </script>
