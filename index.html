@@ -212,20 +212,26 @@
             }
         };
 
-        // Novas funções para limpar e ajustar o número de telefone dinamicamente
+        // ========================================================
+        // INTELIGÊNCIA: Limpeza e Formatação de Telefone (Blocos)
+        // ========================================================
         window.handlePhoneInput = (id) => {
             let dddEl = document.getElementById(`ddd-${id}`);
             let numEl = document.getElementById(`num-${id}`);
             let val = numEl.value;
-            let digits = val.replace(/\D/g, ''); // Remove tudo que não for número
+            let digits = val.replace(/\D/g, ''); // Remove tudo o que não for número
 
-            // Se colou ou digitou DDD junto (10 ou mais dígitos)
-            if (digits.length >= 10) {
+            // Se colou número do WhatsApp com o código de Portugal ou Brasil (+55)
+            if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
+                digits = digits.substring(2);
+            }
+
+            // Se tiver 10 ou 11 dígitos, o sistema separa o DDD e o Número
+            if (digits.length >= 10 && digits.length <= 11) {
                 let newDdd = digits.substring(0, 2);
                 let newNum = digits.substring(2);
 
-                if (newNum.length === 8) newNum = '9' + newNum; // Adiciona o 9 se faltar
-                else if (newNum.length > 9) newNum = newNum.substring(0, 9); // Limita a 9 dígitos
+                if (newNum.length === 8) newNum = '9' + newNum; // Injeta o 9 automaticamente
 
                 window.templates[id].ddd = newDdd;
                 window.templates[id].num = newNum;
@@ -233,30 +239,53 @@
                 dddEl.value = newDdd;
                 numEl.value = newNum;
             } else {
-                window.templates[id].num = val; // Mantém a digitação normal para não atrapalhar
+                window.templates[id].num = val; // Preserva a digitação orgânica
             }
             window.persistAll();
         };
 
         window.handlePhoneBlur = (id) => {
+            let dddEl = document.getElementById(`ddd-${id}`);
             let numEl = document.getElementById(`num-${id}`);
             let digits = numEl.value.replace(/\D/g, '');
 
-            // Ao sair do campo, se tiver 8 dígitos, adiciona o 9 obrigatoriamente
-            if (digits.length === 8) {
+            // Trata as sobras caso a pessoa tenha clicado fora rápido demais após colar
+            if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
+                digits = digits.substring(2);
+            }
+
+            if (digits.length === 10 || digits.length === 11) {
+                let newDdd = digits.substring(0, 2);
+                let newNum = digits.substring(2);
+                if (newNum.length === 8) newNum = '9' + newNum;
+                
+                window.templates[id].ddd = newDdd;
+                dddEl.value = newDdd;
+                digits = newNum;
+            } else if (digits.length === 8) {
+                // Se a pessoa digitou apenas o número antigo, colocamos o 9
                 digits = '9' + digits;
             }
+
             window.templates[id].num = digits;
-            numEl.value = digits; // Formata visualmente limpando hífens e parênteses que ficaram
+            numEl.value = digits; // Formata visualmente o campo sem espaços
             window.persistAll();
         };
 
-        // Lógica do Gerador Rápido
+        // ========================================================
+        // INTELIGÊNCIA: Limpeza e Formatação (Gerador Rápido)
+        // ========================================================
         const quickNumberInput = document.getElementById('quick-number');
         const quickLinkOutput = document.getElementById('quick-link');
 
         quickNumberInput.addEventListener('input', (e) => {
             let val = e.target.value.replace(/\D/g, ''); 
+            
+            // Remove o código do país se tiver
+            if (val.startsWith('55') && (val.length === 12 || val.length === 13)) {
+                val = val.substring(2);
+            }
+            
             e.target.value = val;
             if (val.length > 0) {
                 quickLinkOutput.value = `https://wa.me/55${val}`;
@@ -267,13 +296,26 @@
 
         quickNumberInput.addEventListener('blur', (e) => {
             let val = e.target.value.replace(/\D/g, '');
-            // Se digitou DDD + 8 dígitos (ex: 3388887777), ajusta para incluir o 9 (ex: 33988887777)
+            
+            if (val.startsWith('55') && (val.length === 12 || val.length === 13)) {
+                val = val.substring(2);
+            }
+            
+            // Ajusta o 9 se tiver DDD e o número tiver apenas 8 dígitos (10 total)
             if (val.length === 10) {
                 let ddd = val.substring(0, 2);
                 let num = val.substring(2);
                 val = ddd + '9' + num;
-                e.target.value = val;
+            } else if (val.length === 8) {
+                // Se for só o número, insere o 9
+                val = '9' + val;
+            }
+            
+            e.target.value = val;
+            if (val.length > 0) {
                 quickLinkOutput.value = `https://wa.me/55${val}`;
+            } else {
+                quickLinkOutput.value = '';
             }
         });
 
