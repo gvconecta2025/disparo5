@@ -44,22 +44,42 @@
     </header>
 
     <!-- PAINEL DE CONFIGURAÇÕES (Oculto por padrão) -->
-    <section id="settings-panel" class="hidden w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
+    <section id="settings-panel" class="hidden w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 transition-all">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Configurações de Aparência</h2>
             <button onclick="toggleSettings()" class="text-slate-400 hover:text-slate-600">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Fonte do App:</label>
-            <select id="font-selector" onchange="changeFont(this.value)" class="p-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-400 w-full sm:w-auto min-w-[200px] cursor-pointer">
-                <option value="font-sans">Padrão do Sistema</option>
-                <option value="font-poppins">Poppins (Moderna)</option>
-                <option value="font-inter">Inter (Profissional)</option>
-                <option value="font-montserrat">Montserrat (Elegante)</option>
-                <option value="font-roboto">Roboto (Clássica)</option>
-            </select>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div>
+                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Fonte do App:</label>
+                <select id="font-selector" onchange="changeFont(this.value)" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
+                    <option value="font-sans">Padrão do Sistema</option>
+                    <option value="font-poppins">Poppins (Moderna)</option>
+                    <option value="font-inter">Inter (Profissional)</option>
+                    <option value="font-montserrat">Montserrat (Elegante)</option>
+                    <option value="font-roboto">Roboto (Clássica)</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Fonte dos Botões:</label>
+                <select id="btn-font-selector" onchange="changeBtnFont(this.value)" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
+                    <option value="font-sans">Padrão do Sistema</option>
+                    <option value="font-poppins">Poppins (Moderna)</option>
+                    <option value="font-inter">Inter (Profissional)</option>
+                    <option value="font-montserrat">Montserrat (Elegante)</option>
+                    <option value="font-roboto">Roboto (Clássica)</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Estilo dos Botões:</label>
+                <select id="btn-shape-selector" onchange="changeBtnShape(this.value)" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
+                    <option value="rounded-xl">Arredondado (Padrão)</option>
+                    <option value="rounded-full">Pílula</option>
+                    <option value="rounded-sm">Quadrado</option>
+                </select>
+            </div>
         </div>
     </section>
 
@@ -115,6 +135,9 @@
         
         // Estado Global da Aplicação
         window.appFont = 'font-sans';
+        window.btnFont = 'font-sans';
+        window.btnShape = 'rounded-xl';
+
         window.templates = {
             1: { title: "Modelo 1", msg: "", num: "", ddd: "33" },
             2: { title: "Modelo 2", msg: "", num: "", ddd: "33" },
@@ -157,8 +180,75 @@
         window.changeFont = (fontClass) => {
             window.appFont = fontClass;
             window.applyFont(fontClass);
-            window.persistAll(); // Guarda no Firebase ao mudar
-            window.showToast("Fonte atualizada!");
+            window.persistAll(); 
+            window.showToast("Fonte da aplicação atualizada!");
+        };
+
+        window.changeBtnFont = (fontClass) => {
+            window.btnFont = fontClass;
+            window.persistAll();
+            renderAllBricks();
+            updateStaticButtons();
+            window.showToast("Fonte dos botões atualizada!");
+        };
+
+        window.changeBtnShape = (shapeClass) => {
+            window.btnShape = shapeClass;
+            window.persistAll();
+            renderAllBricks();
+            updateStaticButtons();
+            window.showToast("Formato dos botões atualizado!");
+        };
+
+        window.updateStaticButtons = () => {
+            const quickBtn = document.getElementById('btn-quick-copy');
+            if (quickBtn) {
+                // Remover classes antigas de fonte
+                quickBtn.classList.remove('font-sans', 'font-inter', 'font-poppins', 'font-roboto', 'font-montserrat');
+                quickBtn.classList.add(window.btnFont);
+                // Remover classes antigas de formato
+                quickBtn.classList.remove('rounded-xl', 'rounded-full', 'rounded-sm');
+                quickBtn.classList.add(window.btnShape);
+            }
+        };
+
+        // Novas funções para limpar e ajustar o número de telefone dinamicamente
+        window.handlePhoneInput = (id) => {
+            let dddEl = document.getElementById(`ddd-${id}`);
+            let numEl = document.getElementById(`num-${id}`);
+            let val = numEl.value;
+            let digits = val.replace(/\D/g, ''); // Remove tudo que não for número
+
+            // Se colou ou digitou DDD junto (10 ou mais dígitos)
+            if (digits.length >= 10) {
+                let newDdd = digits.substring(0, 2);
+                let newNum = digits.substring(2);
+
+                if (newNum.length === 8) newNum = '9' + newNum; // Adiciona o 9 se faltar
+                else if (newNum.length > 9) newNum = newNum.substring(0, 9); // Limita a 9 dígitos
+
+                window.templates[id].ddd = newDdd;
+                window.templates[id].num = newNum;
+
+                dddEl.value = newDdd;
+                numEl.value = newNum;
+            } else {
+                window.templates[id].num = val; // Mantém a digitação normal para não atrapalhar
+            }
+            window.persistAll();
+        };
+
+        window.handlePhoneBlur = (id) => {
+            let numEl = document.getElementById(`num-${id}`);
+            let digits = numEl.value.replace(/\D/g, '');
+
+            // Ao sair do campo, se tiver 8 dígitos, adiciona o 9 obrigatoriamente
+            if (digits.length === 8) {
+                digits = '9' + digits;
+            }
+            window.templates[id].num = digits;
+            numEl.value = digits; // Formata visualmente limpando hífens e parênteses que ficaram
+            window.persistAll();
         };
 
         // Lógica do Gerador Rápido
@@ -172,6 +262,18 @@
                 quickLinkOutput.value = `https://wa.me/55${val}`;
             } else {
                 quickLinkOutput.value = '';
+            }
+        });
+
+        quickNumberInput.addEventListener('blur', (e) => {
+            let val = e.target.value.replace(/\D/g, '');
+            // Se digitou DDD + 8 dígitos (ex: 3388887777), ajusta para incluir o 9 (ex: 33988887777)
+            if (val.length === 10) {
+                let ddd = val.substring(0, 2);
+                let num = val.substring(2);
+                val = ddd + '9' + num;
+                e.target.value = val;
+                quickLinkOutput.value = `https://wa.me/55${val}`;
             }
         });
 
@@ -230,8 +332,13 @@
                     const data = docSnap.data();
                     window.templates = data.templates || window.templates;
                     window.appFont = data.font || 'font-sans';
+                    window.btnFont = data.btnFont || 'font-sans';
+                    window.btnShape = data.btnShape || 'rounded-xl';
                     
                     window.applyFont(window.appFont);
+                    document.getElementById('btn-font-selector').value = window.btnFont;
+                    document.getElementById('btn-shape-selector').value = window.btnShape;
+                    window.updateStaticButtons();
                     
                     if (isFirstLoad) {
                         renderAllBricks();
@@ -264,6 +371,8 @@
                     await setDoc(docRef, { 
                         templates: window.templates, 
                         font: window.appFont,
+                        btnFont: window.btnFont,
+                        btnShape: window.btnShape,
                         lastUpdated: new Date() 
                     }, { merge: true });
                     statusText.innerText = "Sincronizado";
@@ -278,7 +387,13 @@
 
         window.disparar = (id, type) => {
             const data = window.templates[id];
-            const cleanNum = data.num ? String(data.num).replace(/\D/g, '') : '';
+            let cleanNum = data.num ? String(data.num).replace(/\D/g, '') : '';
+            
+            // Garantia extra: se tentar disparar muito rápido e o número tiver só 8 dígitos, injeta o 9
+            if (cleanNum.length === 8) {
+                cleanNum = '9' + cleanNum;
+            }
+            
             const msgEncoded = encodeURIComponent(data.msg || '');
             
             if (!cleanNum) {
@@ -297,7 +412,12 @@
 
         window.copiar = (id) => {
             const data = window.templates[id];
-            const cleanNum = data.num ? String(data.num).replace(/\D/g, '') : '';
+            let cleanNum = data.num ? String(data.num).replace(/\D/g, '') : '';
+            
+            if (cleanNum.length === 8) {
+                cleanNum = '9' + cleanNum;
+            }
+            
             const msgEncoded = encodeURIComponent(data.msg || '');
             const link = `https://wa.me/55${data.ddd}${cleanNum}?text=${msgEncoded}`;
             
@@ -347,22 +467,23 @@
                                 <div class="space-y-2">
                                     <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Número do WhatsApp</label>
                                     <div class="flex gap-2">
-                                        <input type="number" value="${window.templates[id].ddd}" 
-                                            oninput="window.templates[${id}].ddd = this.value; persistAll()"
+                                        <input type="number" id="ddd-${id}" value="${window.templates[id].ddd}" 
+                                            oninput="window.templates[${id}].ddd = this.value; window.persistAll()"
                                             class="w-16 p-3 bg-slate-50 border border-gray-100 rounded-xl text-center font-bold text-gray-600 focus:ring-2 focus:ring-green-400 outline-none transition-colors">
-                                        <input type="text" value="${window.templates[id].num}" 
-                                            oninput="window.templates[${id}].num = this.value; persistAll()"
+                                        <input type="text" id="num-${id}" value="${window.templates[id].num}" 
+                                            oninput="window.handlePhoneInput(${id})"
+                                            onblur="window.handlePhoneBlur(${id})"
                                             class="flex-1 p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none transition-colors" 
                                             placeholder="99999-9999">
                                     </div>
                                 </div>
                                 <div class="space-y-2">
                                     <button onclick="disparar(${id}, 'app')" 
-                                        class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-4 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest">
+                                        class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-4 ${window.btnShape} ${window.btnFont} shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest">
                                         WhatsApp App
                                     </button>
                                     <button id="btn-copy-${id}" onclick="copiar(${id})" 
-                                        class="w-full border-2 border-slate-200 hover:border-sky-400 hover:text-sky-600 text-slate-400 font-black py-3 rounded-xl transition-all active:scale-95 uppercase text-[9px] tracking-widest">
+                                        class="w-full border-2 border-slate-200 hover:border-sky-400 hover:text-sky-600 text-slate-400 font-black py-3 ${window.btnShape} ${window.btnFont} transition-all active:scale-95 uppercase text-[9px] tracking-widest">
                                         Copiar Link
                                     </button>
                                 </div>
