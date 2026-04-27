@@ -11,6 +11,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Poppins:wght@400;700;900&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     
+    <!-- Importação do Tesseract.js (IA para ler Imagens) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
     <style>
         /* Classes personalizadas para as fontes */
         .font-inter { font-family: 'Inter', sans-serif; }
@@ -51,7 +54,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
             <div>
                 <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Fonte do App:</label>
                 <select id="font-selector" onchange="changeFont(this.value)" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
@@ -80,14 +83,29 @@
                     <option value="rounded-sm">Quadrado</option>
                 </select>
             </div>
+            <div>
+                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Tamanho do Texto:</label>
+                <select id="btn-size-selector" onchange="changeBtnTextSize(this.value)" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
+                    <option value="text-[10px]">Padrão (Pequeno)</option>
+                    <option value="text-xs">Médio</option>
+                    <option value="text-sm">Grande</option>
+                    <option value="text-base">Extra Grande</option>
+                </select>
+            </div>
         </div>
     </section>
 
     <!-- GERADOR RÁPIDO DE LINK -->
     <section class="w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col sm:flex-row gap-4 items-end">
         <div class="w-full sm:w-1/3">
-            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Gerador Rápido (Qualquer Formato)</label>
-            <input type="text" id="quick-number" class="w-full p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none text-slate-700" placeholder="Ex: (33) 9933-3644">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 flex items-center justify-between">
+                <span>Gerador Rápido</span>
+                <span class="text-[8px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Lê Prints!
+                </span>
+            </label>
+            <input type="text" id="quick-number" class="w-full p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-sm sm:text-base focus:ring-2 focus:ring-green-400 outline-none text-slate-700 transition-all placeholder:text-slate-300" placeholder="Digite ou Cole um Print (Ctrl+V)">
         </div>
         <div class="w-full sm:w-2/3 flex gap-2">
             <input type="text" id="quick-link" class="w-full p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-sm text-slate-400 outline-none cursor-not-allowed" readonly placeholder="https://wa.me/55...">
@@ -137,6 +155,7 @@
         window.appFont = 'font-sans';
         window.btnFont = 'font-sans';
         window.btnShape = 'rounded-xl';
+        window.btnTextSize = 'text-[10px]';
 
         window.templates = {
             1: { title: "Modelo 1", msg: "", num: "", ddd: "33" },
@@ -200,13 +219,25 @@
             window.showToast("Formato dos botões atualizado!");
         };
 
+        window.changeBtnTextSize = (sizeClass) => {
+            window.btnTextSize = sizeClass;
+            window.persistAll();
+            renderAllBricks();
+            window.updateStaticButtons();
+            window.showToast("Tamanho do texto atualizado!");
+        };
+
         window.updateStaticButtons = () => {
             const quickBtn = document.getElementById('btn-quick-copy');
             if (quickBtn) {
                 quickBtn.classList.remove('font-sans', 'font-inter', 'font-poppins', 'font-roboto', 'font-montserrat');
                 quickBtn.classList.add(window.btnFont);
+                
                 quickBtn.classList.remove('rounded-xl', 'rounded-full', 'rounded-sm');
                 quickBtn.classList.add(window.btnShape);
+                
+                quickBtn.classList.remove('text-[9px]', 'text-[10px]', 'text-xs', 'text-sm', 'text-base');
+                quickBtn.classList.add(window.btnTextSize);
             }
         };
 
@@ -217,24 +248,20 @@
             let dddEl = document.getElementById(`ddd-${id}`);
             let numEl = document.getElementById(`num-${id}`);
             let val = numEl.value;
-            let digits = val.replace(/\D/g, ''); // Limpa letras e símbolos imediatamente
+            let digits = val.replace(/\D/g, ''); 
 
-            // Tira o código de país (55) se ele vier colado e prejudicar o tamanho do número
             if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
                 digits = digits.substring(2);
             }
 
-            // A MÁGICA: No Brasil, o número em si nunca tem 10 dígitos. 
-            // Se tiver 10 ou 11, sabemos 100% que os 2 primeiros são o DDD!
             if (digits.length >= 10) {
                 let newDdd = digits.substring(0, 2);
                 let newNum = digits.substring(2);
 
-                // Se o número tiver 8 dígitos, injeta o 9 automaticamente
                 if (newNum.length === 8) {
                     newNum = '9' + newNum; 
                 } else if (newNum.length > 9) {
-                    newNum = newNum.substring(0, 9); // Corta caso tenha colado algo gigante por engano
+                    newNum = newNum.substring(0, 9);
                 }
 
                 window.templates[id].ddd = newDdd;
@@ -242,7 +269,6 @@
                 dddEl.value = newDdd;
                 numEl.value = newNum;
             } else {
-                // Digitação limpa, sem DDD
                 window.templates[id].num = digits;
                 numEl.value = digits;
             }
@@ -253,7 +279,6 @@
             let numEl = document.getElementById(`num-${id}`);
             let digits = numEl.value.replace(/\D/g, '');
 
-            // Garantia extra: se ele colar apenas 8 dígitos perfeitos, injetamos o 9 ao sair do campo
             if (digits.length === 8) {
                 digits = '9' + digits;
                 window.templates[id].num = digits;
@@ -263,21 +288,23 @@
         };
 
         // ========================================================
-        // INTELIGÊNCIA: Limpeza e Formatação (Gerador Rápido)
+        // INTELIGÊNCIA: Gerador Rápido c/ Leitura de Imagens (OCR)
         // ========================================================
         const quickNumberInput = document.getElementById('quick-number');
         const quickLinkOutput = document.getElementById('quick-link');
 
         const processQuickNumber = (e) => {
             let val = e.target.value;
+            
+            // Se o valor for a mensagem de "A ler...", ignoramos o processamento
+            if(val === "A ler imagem com IA...") return;
+
             let digits = val.replace(/\D/g, ''); 
             
-            // Remove +55
             if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
                 digits = digits.substring(2);
             }
             
-            // Injeta o 9 se faltar (se length for 10, quer dizer DDD + 8 digitos)
             if (digits.length >= 10) {
                 let ddd = digits.substring(0, 2);
                 let num = digits.substring(2);
@@ -299,6 +326,58 @@
 
         quickNumberInput.addEventListener('input', processQuickNumber);
         quickNumberInput.addEventListener('blur', processQuickNumber);
+
+        // Intercetor para quando o utilizador faz Colar (Ctrl+V)
+        quickNumberInput.addEventListener('paste', async (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            
+            for (let index in items) {
+                const item = items[index];
+                
+                // Verifica se o que foi colado é uma imagem
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    e.preventDefault(); // Impede o navegador de tentar colar a imagem num campo de texto
+                    const blob = item.getAsFile();
+                    
+                    quickNumberInput.value = "A ler imagem com IA...";
+                    quickLinkOutput.value = "";
+                    
+                    try {
+                        // A IA lê a imagem procurando texto em Português
+                        const { data: { text } } = await Tesseract.recognize(blob, 'por');
+                        
+                        // Procuramos um padrão que se pareça com um telemóvel brasileiro com ou sem formatação
+                        const phoneRegex = /(?:\+?55\s*)?(?:\(?\d{2}\)?\s*)?\d{4,5}[-\s]*\d{4}/g;
+                        const match = text.match(phoneRegex);
+                        
+                        if (match) {
+                            quickNumberInput.value = match[0];
+                            // Chama a função para limpar e formatar o número encontrado
+                            processQuickNumber({ target: quickNumberInput });
+                            window.showToast("Número extraído com sucesso!");
+                        } else {
+                            // Plano B: Extrair todos os dígitos soltos na imagem
+                            let digits = text.replace(/\D/g, '');
+                            if (digits.startsWith('55') && digits.length >= 12) digits = digits.substring(2);
+                            
+                            if (digits.length >= 8 && digits.length <= 11) {
+                                quickNumberInput.value = digits;
+                                processQuickNumber({ target: quickNumberInput });
+                                window.showToast("Número extraído com sucesso!");
+                            } else {
+                                quickNumberInput.value = "";
+                                window.showToast("Nenhum número de telefone claro encontrado.", true);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Erro OCR:", err);
+                        quickNumberInput.value = "";
+                        window.showToast("Erro ao ler a imagem.", true);
+                    }
+                    return; // Sai do ciclo após tratar a imagem
+                }
+            }
+        });
 
         window.copyQuickLink = () => {
             const link = quickLinkOutput.value;
@@ -360,10 +439,12 @@
                     window.appFont = data.font || 'font-sans';
                     window.btnFont = data.btnFont || 'font-sans';
                     window.btnShape = data.btnShape || 'rounded-xl';
+                    window.btnTextSize = data.btnTextSize || 'text-[10px]';
                     
                     window.applyFont(window.appFont);
                     document.getElementById('btn-font-selector').value = window.btnFont;
                     document.getElementById('btn-shape-selector').value = window.btnShape;
+                    document.getElementById('btn-size-selector').value = window.btnTextSize;
                     window.updateStaticButtons();
                     
                     if (isFirstLoad) {
@@ -399,6 +480,7 @@
                         font: window.appFont,
                         btnFont: window.btnFont,
                         btnShape: window.btnShape,
+                        btnTextSize: window.btnTextSize,
                         lastUpdated: new Date() 
                     }, { merge: true });
                     statusText.innerText = "Sincronizado";
@@ -415,7 +497,6 @@
             const data = window.templates[id];
             let cleanNum = data.num ? String(data.num).replace(/\D/g, '') : '';
             
-            // Garantia absoluta para o momento do clique
             if (cleanNum.length === 8) {
                 cleanNum = '9' + cleanNum;
             }
@@ -505,11 +586,11 @@
                                 </div>
                                 <div class="space-y-2">
                                     <button onclick="disparar(${id}, 'app')" 
-                                        class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-4 ${window.btnShape} ${window.btnFont} shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest">
+                                        class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-4 ${window.btnShape} ${window.btnFont} shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase ${window.btnTextSize} tracking-widest">
                                         WhatsApp App
                                     </button>
                                     <button id="btn-copy-${id}" onclick="copiar(${id})" 
-                                        class="w-full border-2 border-slate-200 hover:border-sky-400 hover:text-sky-600 text-slate-400 font-black py-3 ${window.btnShape} ${window.btnFont} transition-all active:scale-95 uppercase text-[9px] tracking-widest">
+                                        class="w-full border-2 border-slate-200 hover:border-sky-400 hover:text-sky-600 text-slate-400 font-black py-3 ${window.btnShape} ${window.btnFont} transition-all active:scale-95 uppercase ${window.btnTextSize} tracking-widest">
                                         Copiar Link
                                     </button>
                                 </div>
