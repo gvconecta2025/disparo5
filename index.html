@@ -3,16 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DisparoFive - Fluxo Direto</title>
+    <title>DisparoFive - Produção</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'disparofive-final';
+        // ========================================================
+        // 1. COLA O TEU CONFIG DO FIREBASE AQUI:
+        // ========================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxZcyaKlxkSSptdRTN8HRyO3P58wbd0jk",
+            authDomain: "disparofire-cfbfb.firebaseapp.com",
+            projectId: "disparofire-cfbfb",
+            storageBucket: "disparofire-cfbfb.firebasestorage.app",
+            messagingSenderId: "194928300801",
+            appId: "1:194928300801:web:906db6180611ab71364100"
+        };
+        // ========================================================
+
+        const appIdentifier = 'disparofive-prod'; // ID para organizar os dados no Firestore
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -28,12 +40,14 @@
         };
 
         const statusText = document.getElementById('status-global');
+        const loadingOverlay = document.getElementById('loading-overlay');
 
         const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
+            try {
                 await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Erro na autenticação:", error);
+                statusText.innerText = "Erro Auth";
             }
         };
 
@@ -46,14 +60,20 @@
 
         const setupDataListener = () => {
             if (!currentUser) return;
-            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'stack');
+            // Path: /artifacts/appId/users/userId/settings/stack
+            const docRef = doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'stack');
             onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
                     templates = docSnap.data().templates || templates;
                     renderAllBricks();
                 }
                 statusText.innerText = "Nuvem: Ativa";
-            }, (err) => { statusText.innerText = "Erro de Conexão"; });
+                loadingOverlay.classList.add('hidden');
+            }, (err) => { 
+                console.error(err);
+                statusText.innerText = "Erro Firestore"; 
+                loadingOverlay.classList.add('hidden');
+            });
         };
 
         let saveTimeout;
@@ -62,7 +82,7 @@
             statusText.innerText = "A guardar...";
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(async () => {
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'stack');
+                const docRef = doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'stack');
                 try {
                     await setDoc(docRef, { templates, lastUpdated: new Date() }, { merge: true });
                     statusText.innerText = "Sincronizado";
@@ -74,9 +94,7 @@
             const data = templates[id];
             const cleanNum = data.num.replace(/\D/g, '');
             const msgEncoded = encodeURIComponent(data.msg);
-            
             if (!cleanNum) return alert("Insira o número no Bloco " + id);
-            
             const baseUrl = (type === 'web') ? "https://web.whatsapp.com/send" : "https://wa.me";
             const link = `${baseUrl}?phone=55${data.ddd}${cleanNum}&text=${msgEncoded}`;
             window.open(link, '_blank');
@@ -88,22 +106,27 @@
             const msgEncoded = encodeURIComponent(data.msg);
             const link = `https://wa.me/55${data.ddd}${cleanNum}?text=${msgEncoded}`;
             
-            navigator.clipboard.writeText(link);
+            const textArea = document.createElement("textarea");
+            textArea.value = link;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+
             const btn = document.getElementById(`btn-copy-${id}`);
+            const originalText = btn.innerText;
             btn.innerText = "LINK COPIADO!";
-            setTimeout(() => btn.innerText = "Copiar Link", 2000);
+            setTimeout(() => btn.innerText = originalText, 2000);
         };
 
         const renderAllBricks = () => {
             const container = document.getElementById('bricks-container');
             container.innerHTML = '';
-            
             Object.keys(templates).forEach(id => {
                 const brick = document.createElement('div');
                 brick.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 transition-all hover:shadow-md";
                 brick.innerHTML = `
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                        <!-- Mensagem -->
                         <div class="lg:col-span-7 space-y-3">
                             <div class="flex items-center gap-3">
                                 <span class="bg-slate-100 text-slate-500 w-7 h-7 flex items-center justify-center rounded-lg font-black text-[10px]">${id}</span>
@@ -112,14 +135,11 @@
                                     class="text-sm font-bold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-green-500 outline-none w-full py-1"
                                     placeholder="Nome do Modelo ${id}">
                             </div>
-
                             <textarea id="textarea-${id}"
                                 oninput="templates[${id}].msg = this.value; persistAll()"
                                 class="w-full h-64 p-4 bg-slate-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-green-400 outline-none text-gray-700 text-sm leading-relaxed resize-none font-sans"
-                                placeholder="Cole aqui o texto da IA. Se houver links de vídeos ou imagens no texto, o WhatsApp mostrará a pré-visualização.">${templates[id].msg}</textarea>
+                                placeholder="Cole o texto aqui...">${templates[id].msg}</textarea>
                         </div>
-
-                        <!-- Número e Ações -->
                         <div class="lg:col-span-5 flex flex-col h-full justify-between pt-10">
                             <div class="space-y-4">
                                 <div class="space-y-2">
@@ -134,11 +154,9 @@
                                             placeholder="99999-9999">
                                     </div>
                                 </div>
-
                                 <div class="space-y-2">
                                     <button onclick="disparar(${id}, 'web')" 
                                         class="w-full bg-[#128C7E] hover:bg-[#075e54] text-white font-black py-4 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-2.135 0-4.159 1.204-5.122 3.091-.433.848-.504 1.464-.397 2.409l-.56 2.069 2.158-.554c.732.417 1.45.626 2.31.626 2.648 0 4.806-2.157 4.806-4.805s-2.157-4.806-4.795-4.806zm3.1 6.953c-.116.326-.677.625-.947.663-.269.038-.616.064-1.256-.142-.35-.113-.778-.261-1.29-.481-2.18-.936-3.593-3.155-3.7-3.3s-.883-1.176-.883-2.247c0-1.071.55-1.598.746-1.815.196-.217.426-.271.569-.271s.286.002.41.008c.13.006.305-.049.478.366.173.416.595 1.45.646 1.554.051.104.085.225.016.364-.069.139-.104.225-.208.347-.104.121-.219.271-.312.364-.104.104-.213.217-.092.426.121.208.539.889 1.155 1.436.793.705 1.46.924 1.668 1.028.208.104.33.087.452-.052.121-.139.52-.607.659-.815.139-.208.277-.173.468-.104.191.069 1.213.572 1.42.676.208.104.347.156.398.243.051.087.051.503-.065.829z"/></svg>
                                         WhatsApp Web
                                     </button>
                                     <button id="btn-copy-${id}" onclick="copiar(${id})" 
@@ -160,6 +178,13 @@
 </head>
 <body class="bg-[#f8fafc] min-h-screen flex flex-col items-center p-4 md:p-8 font-sans">
 
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center transition-opacity duration-300">
+        <div class="flex flex-col items-center gap-3">
+            <div class="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conectando ao teu Firebase...</p>
+        </div>
+    </div>
+
     <header class="w-full max-w-4xl flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 bg-green-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-green-200">
@@ -167,21 +192,21 @@
             </div>
             <div>
                 <h1 class="text-md font-black text-slate-800 leading-none">DisparoFive</h1>
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Central de Abordagem Direta</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Controlo de Vendas Cloud</p>
             </div>
         </div>
         <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
             <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-            <span id="status-global" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">A carregar...</span>
+            <span id="status-global" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Offline</span>
         </div>
     </header>
 
     <main id="bricks-container" class="w-full max-w-4xl">
-        <!-- JS renderiza aqui -->
+        <!-- Tijolos dinâmicos -->
     </main>
 
     <footer class="mt-4 pb-10 text-center opacity-40">
-        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Sincronização Cloud Ativa</p>
+        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Produção • Vercel + Firebase</p>
     </footer>
 
 </body>
