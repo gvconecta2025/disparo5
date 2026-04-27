@@ -248,6 +248,9 @@
             let dddEl = document.getElementById(`ddd-${id}`);
             let numEl = document.getElementById(`num-${id}`);
             let val = numEl.value;
+            
+            if(val === "A ler imagem com IA...") return;
+
             let digits = val.replace(/\D/g, ''); 
 
             if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
@@ -287,6 +290,56 @@
             }
         };
 
+        // OCR PARA OS BLOCOS (Tijolos)
+        window.handlePhonePaste = async (e, id) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            
+            for (let index in items) {
+                const item = items[index];
+                
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    e.preventDefault(); 
+                    const blob = item.getAsFile();
+                    
+                    let numEl = document.getElementById(`num-${id}`);
+                    const originalValue = numEl.value;
+                    numEl.value = "A ler imagem com IA...";
+                    
+                    try {
+                        const { data: { text } } = await Tesseract.recognize(blob, 'por');
+                        
+                        const phoneRegex = /(?:\+?55\s*)?(?:\(?\d{2}\)?\s*)?\d{4,5}[-\s]*\d{4}/g;
+                        const match = text.match(phoneRegex);
+                        
+                        if (match) {
+                            numEl.value = match[0];
+                            window.handlePhoneInput(id);
+                            window.handlePhoneBlur(id);
+                            window.showToast("Número extraído com sucesso!");
+                        } else {
+                            let digits = text.replace(/\D/g, '');
+                            if (digits.startsWith('55') && digits.length >= 12) digits = digits.substring(2);
+                            
+                            if (digits.length >= 8 && digits.length <= 11) {
+                                numEl.value = digits;
+                                window.handlePhoneInput(id);
+                                window.handlePhoneBlur(id);
+                                window.showToast("Número extraído com sucesso!");
+                            } else {
+                                numEl.value = originalValue;
+                                window.showToast("Nenhum número claro encontrado.", true);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Erro OCR:", err);
+                        numEl.value = originalValue;
+                        window.showToast("Erro ao ler a imagem.", true);
+                    }
+                    return; 
+                }
+            }
+        };
+
         // ========================================================
         // INTELIGÊNCIA: Gerador Rápido c/ Leitura de Imagens (OCR)
         // ========================================================
@@ -296,7 +349,6 @@
         const processQuickNumber = (e) => {
             let val = e.target.value;
             
-            // Se o valor for a mensagem de "A ler...", ignoramos o processamento
             if(val === "A ler imagem com IA...") return;
 
             let digits = val.replace(/\D/g, ''); 
@@ -327,36 +379,30 @@
         quickNumberInput.addEventListener('input', processQuickNumber);
         quickNumberInput.addEventListener('blur', processQuickNumber);
 
-        // Intercetor para quando o utilizador faz Colar (Ctrl+V)
         quickNumberInput.addEventListener('paste', async (e) => {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             
             for (let index in items) {
                 const item = items[index];
                 
-                // Verifica se o que foi colado é uma imagem
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
-                    e.preventDefault(); // Impede o navegador de tentar colar a imagem num campo de texto
+                    e.preventDefault(); 
                     const blob = item.getAsFile();
                     
                     quickNumberInput.value = "A ler imagem com IA...";
                     quickLinkOutput.value = "";
                     
                     try {
-                        // A IA lê a imagem procurando texto em Português
                         const { data: { text } } = await Tesseract.recognize(blob, 'por');
                         
-                        // Procuramos um padrão que se pareça com um telemóvel brasileiro com ou sem formatação
                         const phoneRegex = /(?:\+?55\s*)?(?:\(?\d{2}\)?\s*)?\d{4,5}[-\s]*\d{4}/g;
                         const match = text.match(phoneRegex);
                         
                         if (match) {
                             quickNumberInput.value = match[0];
-                            // Chama a função para limpar e formatar o número encontrado
                             processQuickNumber({ target: quickNumberInput });
                             window.showToast("Número extraído com sucesso!");
                         } else {
-                            // Plano B: Extrair todos os dígitos soltos na imagem
                             let digits = text.replace(/\D/g, '');
                             if (digits.startsWith('55') && digits.length >= 12) digits = digits.substring(2);
                             
@@ -374,7 +420,7 @@
                         quickNumberInput.value = "";
                         window.showToast("Erro ao ler a imagem.", true);
                     }
-                    return; // Sai do ciclo após tratar a imagem
+                    return; 
                 }
             }
         });
@@ -572,7 +618,13 @@
                         <div class="lg:col-span-5 flex flex-col h-full justify-between pt-10">
                             <div class="space-y-4">
                                 <div class="space-y-2">
-                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Número do WhatsApp</label>
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block flex items-center justify-between">
+                                        <span>Número do WhatsApp</span>
+                                        <span class="text-[8px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                            Lê Prints!
+                                        </span>
+                                    </label>
                                     <div class="flex gap-2">
                                         <input type="number" id="ddd-${id}" value="${window.templates[id].ddd}" 
                                             oninput="window.templates[${id}].ddd = this.value; window.persistAll()"
@@ -580,8 +632,9 @@
                                         <input type="text" id="num-${id}" value="${window.templates[id].num}" 
                                             oninput="window.handlePhoneInput(${id})"
                                             onblur="window.handlePhoneBlur(${id})"
-                                            class="flex-1 p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none transition-colors" 
-                                            placeholder="Ex: 99999-9999">
+                                            onpaste="window.handlePhonePaste(event, ${id})"
+                                            class="flex-1 p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none transition-colors placeholder:text-slate-300" 
+                                            placeholder="Digite ou Cole Print">
                                     </div>
                                 </div>
                                 <div class="space-y-2">
