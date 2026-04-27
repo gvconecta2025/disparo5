@@ -97,8 +97,8 @@
     </section>
 
     <!-- GERADOR RÁPIDO DE LINK -->
-    <section class="w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col sm:flex-row gap-4 items-end">
-        <div class="w-full sm:w-1/3">
+    <section class="w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col md:flex-row gap-4 items-end">
+        <div class="w-full md:w-1/3">
             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 flex items-center justify-between">
                 <span>Gerador Rápido</span>
                 <span class="text-[8px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -108,9 +108,12 @@
             </label>
             <input type="text" id="quick-number" class="w-full p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-sm sm:text-base focus:ring-2 focus:ring-green-400 outline-none text-slate-700 transition-all placeholder:text-slate-300" placeholder="Digite ou Cole um Print (Ctrl+V)">
         </div>
-        <div class="w-full sm:w-2/3 flex gap-2">
-            <input type="text" id="quick-link" class="w-full p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-sm text-slate-400 outline-none cursor-not-allowed" readonly placeholder="https://wa.me/55...">
-            <button id="btn-quick-copy" onclick="copyQuickLink()" class="bg-sky-500 hover:bg-sky-600 text-white font-black px-6 py-3 rounded-xl shadow-sm transition-all active:scale-95 uppercase text-[10px] tracking-widest whitespace-nowrap">
+        <div class="w-full md:w-2/3 flex flex-wrap sm:flex-nowrap gap-2">
+            <input type="text" id="quick-link" class="flex-1 w-full sm:w-auto p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-sm text-slate-400 outline-none cursor-not-allowed" readonly placeholder="https://wa.me/55...">
+            <button id="btn-quick-whatsapp" onclick="openQuickWhatsApp()" class="bg-[#25D366] hover:bg-[#128C7E] text-white font-black px-4 py-3 rounded-xl shadow-sm transition-all active:scale-95 uppercase text-[10px] tracking-widest whitespace-nowrap flex-1 sm:flex-none">
+                WhatsApp
+            </button>
+            <button id="btn-quick-copy" onclick="copyQuickLink()" class="bg-sky-500 hover:bg-sky-600 text-white font-black px-4 py-3 rounded-xl shadow-sm transition-all active:scale-95 uppercase text-[10px] tracking-widest whitespace-nowrap flex-1 sm:flex-none">
                 Copiar
             </button>
         </div>
@@ -229,17 +232,22 @@
         };
 
         window.updateStaticButtons = () => {
-            const quickBtn = document.getElementById('btn-quick-copy');
-            if (quickBtn) {
-                quickBtn.classList.remove('font-sans', 'font-inter', 'font-poppins', 'font-roboto', 'font-montserrat');
-                quickBtn.classList.add(window.btnFont);
-                
-                quickBtn.classList.remove('rounded-xl', 'rounded-full', 'rounded-sm');
-                quickBtn.classList.add(window.btnShape);
-                
-                quickBtn.classList.remove('text-[9px]', 'text-[10px]', 'text-xs', 'text-sm', 'text-base', 'text-lg');
-                quickBtn.classList.add(window.btnTextSize);
-            }
+            const quickBtnCopy = document.getElementById('btn-quick-copy');
+            const quickBtnWa = document.getElementById('btn-quick-whatsapp');
+            const staticBtns = [quickBtnCopy, quickBtnWa];
+            
+            staticBtns.forEach(btn => {
+                if (btn) {
+                    btn.classList.remove('font-sans', 'font-inter', 'font-poppins', 'font-roboto', 'font-montserrat');
+                    btn.classList.add(window.btnFont);
+                    
+                    btn.classList.remove('rounded-xl', 'rounded-full', 'rounded-sm');
+                    btn.classList.add(window.btnShape);
+                    
+                    btn.classList.remove('text-[9px]', 'text-[10px]', 'text-xs', 'text-sm', 'text-base', 'text-lg');
+                    btn.classList.add(window.btnTextSize);
+                }
+            });
         };
 
         // ========================================================
@@ -426,6 +434,20 @@
             }
         });
 
+        // Ação: WhatsApp Direto no Gerador Rápido
+        window.openQuickWhatsApp = () => {
+            const link = quickLinkOutput.value;
+            if (!link) {
+                window.showToast("Insira um número primeiro!", true);
+                return;
+            }
+            const phone = link.split('wa.me/')[1];
+            if (phone) {
+                window.open(`whatsapp://send?phone=${phone}`, '_self');
+            }
+        };
+
+        // Ação: Copiar Link no Gerador Rápido
         window.copyQuickLink = () => {
             const link = quickLinkOutput.value;
             if (!link) {
