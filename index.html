@@ -5,8 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DisparoFive - Produção</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Importação de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Poppins:wght@400;700;900&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Classes personalizadas para as fontes */
+        .font-inter { font-family: 'Inter', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+    </style>
 </head>
-<body class="bg-[#f8fafc] min-h-screen flex flex-col items-center p-4 md:p-8 font-sans">
+<body class="bg-[#f8fafc] min-h-screen flex flex-col items-center p-4 md:p-8 font-sans transition-all duration-300">
 
     <header class="w-full max-w-4xl flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60 mt-4">
         <div class="flex items-center gap-3">
@@ -18,11 +31,37 @@
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Controlo de Vendas Cloud</p>
             </div>
         </div>
-        <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-            <div id="status-dot" class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
-            <span id="status-global" class="text-[9px] font-black text-slate-500 uppercase tracking-widest">A ligar...</span>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                <div id="status-dot" class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
+                <span id="status-global" class="text-[9px] font-black text-slate-500 uppercase tracking-widest">A ligar...</span>
+            </div>
+            <!-- Botão de Configurações -->
+            <button onclick="toggleSettings()" class="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-slate-100 rounded-full transition-colors" title="Configurações">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
         </div>
     </header>
+
+    <!-- PAINEL DE CONFIGURAÇÕES (Oculto por padrão) -->
+    <section id="settings-panel" class="hidden w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Configurações de Aparência</h2>
+            <button onclick="toggleSettings()" class="text-slate-400 hover:text-slate-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Fonte do App:</label>
+            <select id="font-selector" onchange="changeFont(this.value)" class="p-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-400 w-full sm:w-auto min-w-[200px] cursor-pointer">
+                <option value="font-sans">Padrão do Sistema</option>
+                <option value="font-poppins">Poppins (Moderna)</option>
+                <option value="font-inter">Inter (Profissional)</option>
+                <option value="font-montserrat">Montserrat (Elegante)</option>
+                <option value="font-roboto">Roboto (Clássica)</option>
+            </select>
+        </div>
+    </section>
 
     <!-- GERADOR RÁPIDO DE LINK -->
     <section class="w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col sm:flex-row gap-4 items-end">
@@ -72,8 +111,10 @@
         const db = getFirestore(app);
 
         let currentUser = null;
-        let isFirstLoad = true; // Previne o re-render que rouba o foco do teclado
+        let isFirstLoad = true; 
         
+        // Estado Global da Aplicação
+        window.appFont = 'font-sans';
         window.templates = {
             1: { title: "Modelo 1", msg: "", num: "", ddd: "33" },
             2: { title: "Modelo 2", msg: "", num: "", ddd: "33" },
@@ -101,12 +142,31 @@
             }, 3000);
         };
 
+        // Lógica do Menu de Configurações e Fontes
+        window.toggleSettings = () => {
+            const panel = document.getElementById('settings-panel');
+            panel.classList.toggle('hidden');
+        };
+
+        window.applyFont = (fontClass) => {
+            document.body.classList.remove('font-sans', 'font-inter', 'font-poppins', 'font-roboto', 'font-montserrat');
+            document.body.classList.add(fontClass);
+            document.getElementById('font-selector').value = fontClass;
+        };
+
+        window.changeFont = (fontClass) => {
+            window.appFont = fontClass;
+            window.applyFont(fontClass);
+            window.persistAll(); // Guarda no Firebase ao mudar
+            window.showToast("Fonte atualizada!");
+        };
+
         // Lógica do Gerador Rápido
         const quickNumberInput = document.getElementById('quick-number');
         const quickLinkOutput = document.getElementById('quick-link');
 
         quickNumberInput.addEventListener('input', (e) => {
-            let val = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
+            let val = e.target.value.replace(/\D/g, ''); 
             e.target.value = val;
             if (val.length > 0) {
                 quickLinkOutput.value = `https://wa.me/55${val}`;
@@ -167,7 +227,11 @@
             
             onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
-                    window.templates = docSnap.data().templates || window.templates;
+                    const data = docSnap.data();
+                    window.templates = data.templates || window.templates;
+                    window.appFont = data.font || 'font-sans';
+                    
+                    window.applyFont(window.appFont);
                     
                     if (isFirstLoad) {
                         renderAllBricks();
@@ -197,7 +261,11 @@
             saveTimeout = setTimeout(async () => {
                 const docRef = doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'stack');
                 try {
-                    await setDoc(docRef, { templates: window.templates, lastUpdated: new Date() }, { merge: true });
+                    await setDoc(docRef, { 
+                        templates: window.templates, 
+                        font: window.appFont,
+                        lastUpdated: new Date() 
+                    }, { merge: true });
                     statusText.innerText = "Sincronizado";
                     statusDot.className = "w-2 h-2 rounded-full bg-green-500";
                 } catch (e) { 
@@ -219,12 +287,9 @@
             }
 
             if (type === 'app') {
-                // Protocolo para abrir o aplicativo do WhatsApp no computador
                 const link = `whatsapp://send?phone=55${data.ddd}${cleanNum}&text=${msgEncoded}`;
-                // _self evita que o navegador deixe uma aba em branco aberta após chamar o app
                 window.open(link, '_self'); 
             } else {
-                // Protocolo alternativo web (não usado agora, mas mantido por segurança)
                 const link = `https://web.whatsapp.com/send?phone=55${data.ddd}${cleanNum}&text=${msgEncoded}`;
                 window.open(link, '_blank');
             }
@@ -269,12 +334,12 @@
                                 <span class="bg-slate-100 text-slate-500 w-7 h-7 flex items-center justify-center rounded-lg font-black text-[10px]">${id}</span>
                                 <input type="text" value="${window.templates[id].title}" 
                                     oninput="window.templates[${id}].title = this.value; persistAll()"
-                                    class="text-sm font-bold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-green-500 outline-none w-full py-1"
+                                    class="text-sm font-bold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-green-500 outline-none w-full py-1 transition-colors"
                                     placeholder="Nome do Modelo ${id}">
                             </div>
                             <textarea id="textarea-${id}"
                                 oninput="window.templates[${id}].msg = this.value; persistAll()"
-                                class="w-full h-64 p-4 bg-slate-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-green-400 outline-none text-gray-700 text-sm leading-relaxed resize-none font-sans"
+                                class="w-full h-64 p-4 bg-slate-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-green-400 outline-none text-gray-700 text-sm leading-relaxed resize-none transition-colors"
                                 placeholder="Cole o texto aqui...">${window.templates[id].msg}</textarea>
                         </div>
                         <div class="lg:col-span-5 flex flex-col h-full justify-between pt-10">
@@ -284,10 +349,10 @@
                                     <div class="flex gap-2">
                                         <input type="number" value="${window.templates[id].ddd}" 
                                             oninput="window.templates[${id}].ddd = this.value; persistAll()"
-                                            class="w-16 p-3 bg-slate-50 border border-gray-100 rounded-xl text-center font-bold text-gray-600 focus:ring-2 focus:ring-green-400 outline-none">
+                                            class="w-16 p-3 bg-slate-50 border border-gray-100 rounded-xl text-center font-bold text-gray-600 focus:ring-2 focus:ring-green-400 outline-none transition-colors">
                                         <input type="text" value="${window.templates[id].num}" 
                                             oninput="window.templates[${id}].num = this.value; persistAll()"
-                                            class="flex-1 p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none" 
+                                            class="flex-1 p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none transition-colors" 
                                             placeholder="99999-9999">
                                     </div>
                                 </div>
@@ -309,7 +374,6 @@
             });
         };
 
-        // Renderiza a estrutura vazia imediatamente, depois conecta à Nuvem
         renderAllBricks();
         initAuth();
     </script>
