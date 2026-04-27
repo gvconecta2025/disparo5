@@ -86,8 +86,8 @@
     <!-- GERADOR RÁPIDO DE LINK -->
     <section class="w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col sm:flex-row gap-4 items-end">
         <div class="w-full sm:w-1/3">
-            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Gerador Rápido (DDD + Número)</label>
-            <input type="text" id="quick-number" class="w-full p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none text-slate-700" placeholder="Ex: 33999999999">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Gerador Rápido (Qualquer Formato)</label>
+            <input type="text" id="quick-number" class="w-full p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none text-slate-700" placeholder="Ex: (33) 9933-3644">
         </div>
         <div class="w-full sm:w-2/3 flex gap-2">
             <input type="text" id="quick-link" class="w-full p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-sm text-slate-400 outline-none cursor-not-allowed" readonly placeholder="https://wa.me/55...">
@@ -217,71 +217,49 @@
             let dddEl = document.getElementById(`ddd-${id}`);
             let numEl = document.getElementById(`num-${id}`);
             let val = numEl.value;
-            let digits = val.replace(/\D/g, ''); // Limpa imediatamente letras e símbolos
+            let digits = val.replace(/\D/g, ''); // Limpa letras e símbolos imediatamente
 
-            // Identifica se o usuário colou com formatação (+, (), -, espaço)
-            let isPasteOrFormatted = val.includes('+') || val.includes('(') || val.includes(')') || val.includes('-') || val.includes(' ');
-
-            // Tira o código do Brasil se veio colado
+            // Tira o código de país (55) se ele vier colado e prejudicar o tamanho do número
             if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
                 digits = digits.substring(2);
-                isPasteOrFormatted = true;
             }
 
-            // Se colou número inteiro com DDD e Número
-            if (isPasteOrFormatted && (digits.length >= 10 && digits.length <= 11)) {
+            // A MÁGICA: No Brasil, o número em si nunca tem 10 dígitos. 
+            // Se tiver 10 ou 11, sabemos 100% que os 2 primeiros são o DDD!
+            if (digits.length >= 10) {
                 let newDdd = digits.substring(0, 2);
                 let newNum = digits.substring(2);
 
-                // Só injeta o 9 se for um número de telemóvel antigo (começa por 7, 8 ou 9)
-                if (newNum.length === 8 && ['7', '8', '9'].includes(newNum[0])) {
+                // Se o número tiver 8 dígitos, injeta o 9 automaticamente
+                if (newNum.length === 8) {
                     newNum = '9' + newNum; 
+                } else if (newNum.length > 9) {
+                    newNum = newNum.substring(0, 9); // Corta caso tenha colado algo gigante por engano
                 }
 
                 window.templates[id].ddd = newDdd;
                 window.templates[id].num = newNum;
                 dddEl.value = newDdd;
                 numEl.value = newNum;
-            } 
-            // Se colou apenas o número antigo de 8 dígitos
-            else if (isPasteOrFormatted && digits.length === 8 && ['7', '8', '9'].includes(digits[0])) {
-                digits = '9' + digits;
+            } else {
+                // Digitação limpa, sem DDD
                 window.templates[id].num = digits;
                 numEl.value = digits;
-            } 
-            // Digitação orgânica
-            else {
-                window.templates[id].num = digits;
-                numEl.value = digits; // Mantém no ecrã apenas os números limpos
             }
             window.persistAll();
         };
 
         window.handlePhoneBlur = (id) => {
-            let dddEl = document.getElementById(`ddd-${id}`);
             let numEl = document.getElementById(`num-${id}`);
             let digits = numEl.value.replace(/\D/g, '');
 
-            if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
-                digits = digits.substring(2);
-            }
-
-            if (digits.length === 10 || digits.length === 11) {
-                let newDdd = digits.substring(0, 2);
-                let newNum = digits.substring(2);
-                if (newNum.length === 8 && ['7', '8', '9'].includes(newNum[0])) {
-                    newNum = '9' + newNum;
-                }
-                window.templates[id].ddd = newDdd;
-                dddEl.value = newDdd;
-                digits = newNum;
-            } else if (digits.length === 8 && ['7', '8', '9'].includes(digits[0])) {
+            // Garantia extra: se ele colar apenas 8 dígitos perfeitos, injetamos o 9 ao sair do campo
+            if (digits.length === 8) {
                 digits = '9' + digits;
+                window.templates[id].num = digits;
+                numEl.value = digits; 
+                window.persistAll();
             }
-
-            window.templates[id].num = digits;
-            numEl.value = digits; 
-            window.persistAll();
         };
 
         // ========================================================
@@ -290,27 +268,25 @@
         const quickNumberInput = document.getElementById('quick-number');
         const quickLinkOutput = document.getElementById('quick-link');
 
-        quickNumberInput.addEventListener('input', (e) => {
+        const processQuickNumber = (e) => {
             let val = e.target.value;
             let digits = val.replace(/\D/g, ''); 
             
-            let isPasteOrFormatted = val.includes('+') || val.includes('(') || val.includes(')') || val.includes('-') || val.includes(' ');
-
+            // Remove +55
             if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
                 digits = digits.substring(2);
-                isPasteOrFormatted = true;
             }
             
-            if (isPasteOrFormatted) {
-                if (digits.length === 10) {
-                    let ddd = digits.substring(0, 2);
-                    let num = digits.substring(2);
-                    if (['7', '8', '9'].includes(num[0])) {
-                        digits = ddd + '9' + num;
-                    }
-                } else if (digits.length === 8 && ['7', '8', '9'].includes(digits[0])) {
-                    digits = '9' + digits;
+            // Injeta o 9 se faltar (se length for 10, quer dizer DDD + 8 digitos)
+            if (digits.length >= 10) {
+                let ddd = digits.substring(0, 2);
+                let num = digits.substring(2);
+                if (num.length === 8) {
+                    num = '9' + num;
+                } else if (num.length > 9) {
+                    num = num.substring(0, 9);
                 }
+                digits = ddd + num;
             }
             
             e.target.value = digits;
@@ -319,32 +295,10 @@
             } else {
                 quickLinkOutput.value = '';
             }
-        });
+        };
 
-        quickNumberInput.addEventListener('blur', (e) => {
-            let val = e.target.value.replace(/\D/g, '');
-            
-            if (val.startsWith('55') && (val.length === 12 || val.length === 13)) {
-                val = val.substring(2);
-            }
-            
-            if (val.length === 10) {
-                let ddd = val.substring(0, 2);
-                let num = val.substring(2);
-                if (['7', '8', '9'].includes(num[0])) {
-                    val = ddd + '9' + num;
-                }
-            } else if (val.length === 8 && ['7', '8', '9'].includes(val[0])) {
-                val = '9' + val;
-            }
-            
-            e.target.value = val;
-            if (val.length > 0) {
-                quickLinkOutput.value = `https://wa.me/55${val}`;
-            } else {
-                quickLinkOutput.value = '';
-            }
-        });
+        quickNumberInput.addEventListener('input', processQuickNumber);
+        quickNumberInput.addEventListener('blur', processQuickNumber);
 
         window.copyQuickLink = () => {
             const link = quickLinkOutput.value;
@@ -375,6 +329,9 @@
             window.showToast("Link rápido copiado!");
         };
 
+        // ========================================================
+        // INICIALIZAÇÃO FIREBASE E APP
+        // ========================================================
         const initAuth = async () => {
             try {
                 await signInAnonymously(auth);
@@ -458,8 +415,8 @@
             const data = window.templates[id];
             let cleanNum = data.num ? String(data.num).replace(/\D/g, '') : '';
             
-            // Garantia absoluta: se chegar com 8 dígitos aqui (telemóvel), injeta o 9
-            if (cleanNum.length === 8 && ['7', '8', '9'].includes(cleanNum[0])) {
+            // Garantia absoluta para o momento do clique
+            if (cleanNum.length === 8) {
                 cleanNum = '9' + cleanNum;
             }
             
@@ -483,8 +440,7 @@
             const data = window.templates[id];
             let cleanNum = data.num ? String(data.num).replace(/\D/g, '') : '';
             
-            // Garantia absoluta: se chegar com 8 dígitos aqui (telemóvel), injeta o 9
-            if (cleanNum.length === 8 && ['7', '8', '9'].includes(cleanNum[0])) {
+            if (cleanNum.length === 8) {
                 cleanNum = '9' + cleanNum;
             }
             
@@ -544,7 +500,7 @@
                                             oninput="window.handlePhoneInput(${id})"
                                             onblur="window.handlePhoneBlur(${id})"
                                             class="flex-1 p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none transition-colors" 
-                                            placeholder="99999-9999">
+                                            placeholder="Ex: 99999-9999">
                                     </div>
                                 </div>
                                 <div class="space-y-2">
