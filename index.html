@@ -161,13 +161,11 @@
         window.btnShape = 'rounded-xl';
         window.btnTextSize = 'text-[10px]';
 
-        window.templates = {
-            1: { title: "Modelo 1", msg: "", num: "", ddd: "33" },
-            2: { title: "Modelo 2", msg: "", num: "", ddd: "33" },
-            3: { title: "Modelo 3", msg: "", num: "", ddd: "33" },
-            4: { title: "Modelo 4", msg: "", num: "", ddd: "33" },
-            5: { title: "Modelo 5", msg: "", num: "", ddd: "33" }
-        };
+        // 10 Modelos Disponíveis
+        window.templates = {};
+        for(let i = 1; i <= 10; i++) {
+            window.templates[i] = { title: `Modelo ${i}`, msg: "", num: "", ddd: "33" };
+        }
 
         const statusText = document.getElementById('status-global');
         const statusDot = document.getElementById('status-dot');
@@ -250,11 +248,45 @@
             });
         };
 
+        // Copiar o texto da mensagem do bloco
+        window.copyMessageText = (id) => {
+            const msg = window.templates[id].msg;
+            if (!msg) {
+                window.showToast("A mensagem está vazia!", true);
+                return;
+            }
+            const textArea = document.createElement("textarea");
+            textArea.value = msg;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            window.showToast("Texto da mensagem copiado!");
+        };
+
+        // Função Global para sincronizar números em TODOS os 10 blocos
+        window.syncAllPhones = (newDdd, newNum) => {
+            Object.keys(window.templates).forEach(i => {
+                window.templates[i].ddd = newDdd;
+                window.templates[i].num = newNum;
+                let dddEl = document.getElementById(`ddd-${i}`);
+                let numEl = document.getElementById(`num-${i}`);
+                if (dddEl) dddEl.value = newDdd;
+                if (numEl) numEl.value = newNum;
+            });
+            window.persistAll();
+        };
+
         // ========================================================
         // INTELIGÊNCIA: Limpeza e Formatação de Telefone (Blocos)
         // ========================================================
+        window.handleDddInput = (id) => {
+            let val = document.getElementById(`ddd-${id}`).value;
+            // Clonar o novo DDD e o número existente em todos os campos
+            window.syncAllPhones(val, window.templates[id].num);
+        };
+
         window.handlePhoneInput = (id) => {
-            let dddEl = document.getElementById(`ddd-${id}`);
             let numEl = document.getElementById(`num-${id}`);
             let val = numEl.value;
             
@@ -266,36 +298,37 @@
                 digits = digits.substring(2);
             }
 
+            let finalDdd = window.templates[id].ddd;
+            let finalNum = digits;
+
             if (digits.length >= 10) {
-                let newDdd = digits.substring(0, 2);
+                finalDdd = digits.substring(0, 2);
                 let newNum = digits.substring(2);
 
                 if (newNum.length === 8) {
-                    newNum = '9' + newNum; 
+                    finalNum = '9' + newNum; 
                 } else if (newNum.length > 9) {
-                    newNum = newNum.substring(0, 9);
+                    finalNum = newNum.substring(0, 9);
+                } else {
+                    finalNum = newNum;
                 }
-
-                window.templates[id].ddd = newDdd;
-                window.templates[id].num = newNum;
-                dddEl.value = newDdd;
-                numEl.value = newNum;
-            } else {
-                window.templates[id].num = digits;
-                numEl.value = digits;
             }
-            window.persistAll();
+            
+            // Clona automaticamente para os 10 blocos!
+            window.syncAllPhones(finalDdd, finalNum);
         };
 
         window.handlePhoneBlur = (id) => {
             let numEl = document.getElementById(`num-${id}`);
             let digits = numEl.value.replace(/\D/g, '');
+            
+            let finalDdd = window.templates[id].ddd;
+            let finalNum = digits;
 
             if (digits.length === 8) {
-                digits = '9' + digits;
-                window.templates[id].num = digits;
-                numEl.value = digits; 
-                window.persistAll();
+                finalNum = '9' + digits;
+                // Clona automaticamente para os 10 blocos!
+                window.syncAllPhones(finalDdd, finalNum);
             }
         };
 
@@ -504,7 +537,16 @@
             onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    window.templates = data.templates || window.templates;
+                    
+                    // Mergir templates com a garantia de termos os 10
+                    let loadedTemplates = data.templates || {};
+                    for(let i = 1; i <= 10; i++) {
+                        if(!loadedTemplates[i]) {
+                            loadedTemplates[i] = { title: `Modelo ${i}`, msg: "", num: "", ddd: "33" };
+                        }
+                    }
+                    window.templates = loadedTemplates;
+
                     window.appFont = data.font || 'font-sans';
                     window.btnFont = data.btnFont || 'font-sans';
                     window.btnShape = data.btnShape || 'rounded-xl';
@@ -626,12 +668,17 @@
                 brick.innerHTML = `
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                         <div class="lg:col-span-7 space-y-3">
-                            <div class="flex items-center gap-3">
-                                <span class="bg-slate-100 text-slate-500 w-7 h-7 flex items-center justify-center rounded-lg font-black text-[10px]">${id}</span>
-                                <input type="text" value="${window.templates[id].title}" 
-                                    oninput="window.templates[${id}].title = this.value; persistAll()"
-                                    class="text-sm font-bold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-green-500 outline-none w-full py-1 transition-colors"
-                                    placeholder="Nome do Modelo ${id}">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <span class="bg-slate-100 text-slate-500 w-7 h-7 flex items-center justify-center rounded-lg font-black text-[10px] shrink-0">${id}</span>
+                                    <input type="text" value="${window.templates[id].title}" 
+                                        oninput="window.templates[${id}].title = this.value; persistAll()"
+                                        class="text-sm font-bold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-green-500 outline-none w-full py-1 transition-colors"
+                                        placeholder="Nome do Modelo ${id}">
+                                </div>
+                                <button onclick="copyMessageText(${id})" class="ml-3 p-2 text-slate-400 hover:text-sky-500 hover:bg-sky-50 rounded-lg transition-colors shrink-0" title="Copiar Texto da Mensagem">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                </button>
                             </div>
                             <textarea id="textarea-${id}"
                                 oninput="window.templates[${id}].msg = this.value; persistAll()"
@@ -650,7 +697,7 @@
                                     </label>
                                     <div class="flex gap-2">
                                         <input type="number" id="ddd-${id}" value="${window.templates[id].ddd}" 
-                                            oninput="window.templates[${id}].ddd = this.value; window.persistAll()"
+                                            oninput="window.handleDddInput(${id})"
                                             class="w-16 p-3 bg-slate-50 border border-gray-100 rounded-xl text-center font-bold text-gray-600 focus:ring-2 focus:ring-green-400 outline-none transition-colors">
                                         <input type="text" id="num-${id}" value="${window.templates[id].num}" 
                                             oninput="window.handlePhoneInput(${id})"
