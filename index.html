@@ -49,10 +49,22 @@
 
         <div class="flex flex-col gap-3 mt-2">
             <button onclick="doLogin()" class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase tracking-widest text-xs">
-                Entrar
+                Entrar com Email
             </button>
             <button onclick="doRegister()" class="w-full border-2 border-slate-200 hover:border-slate-300 text-slate-500 font-black py-3 rounded-xl transition-all active:scale-95 uppercase tracking-widest text-xs">
                 Criar Nova Conta
+            </button>
+            
+            <div class="relative flex py-2 items-center">
+                <div class="flex-grow border-t border-slate-200"></div>
+                <span class="flex-shrink-0 mx-4 text-slate-400 text-[10px] uppercase font-bold tracking-widest">Ou</span>
+                <div class="flex-grow border-t border-slate-200"></div>
+            </div>
+
+            <!-- Botão Entrar com Google -->
+            <button onclick="doGoogleLogin()" class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-black py-3 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
+                <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 15.02 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Entrar com Google
             </button>
         </div>
     </div>
@@ -62,7 +74,7 @@
     <!-- ========================================== -->
     <div id="app-container" class="hidden w-full flex-col items-center">
 
-        <!-- CABEÇALHO (Com Projetos) -->
+        <!-- CABEÇALHO (Com Projetos e Ações) -->
         <header class="w-full max-w-[1600px] flex flex-col md:flex-row justify-between items-center gap-4 mb-4 bg-white p-3 rounded-xl shadow-sm border border-slate-200/60">
             <div class="flex items-center gap-3 w-full md:w-auto">
                 <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-white shadow-md shadow-green-200 shrink-0">
@@ -75,14 +87,26 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                <!-- Seletor de Projetos -->
-                <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-lg border border-slate-100 flex-1 md:flex-none">
-                    <select id="project-selector" onchange="changeProject(this.value)" class="bg-transparent font-bold text-xs text-slate-700 outline-none cursor-pointer flex-1 w-32 truncate">
+                
+                <!-- GESTÃO DE PROJETOS -->
+                <div class="flex items-center bg-slate-50 p-1.5 rounded-lg border border-slate-100 flex-1 md:flex-none">
+                    <select id="project-selector" onchange="changeProject(this.value)" class="bg-transparent font-bold text-xs text-slate-700 outline-none cursor-pointer flex-1 w-28 truncate pl-1">
                         <!-- Options carregadas via JS -->
                     </select>
-                    <button onclick="createNewProject()" class="bg-sky-100 text-sky-600 hover:bg-sky-200 px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-colors">
-                        + Novo
-                    </button>
+                    <div class="flex items-center border-l border-slate-200 pl-1.5 ml-1.5 gap-1">
+                        <!-- Renomear -->
+                        <button onclick="renameProject()" class="text-slate-400 hover:text-amber-500 transition-colors p-1" title="Renomear Projeto Atual">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </button>
+                        <!-- Excluir -->
+                        <button onclick="deleteProject()" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Excluir Projeto Atual">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                        <!-- Novo -->
+                        <button onclick="createNewProject()" class="bg-sky-100 text-sky-600 hover:bg-sky-200 px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-colors ml-0.5" title="Criar Novo Projeto">
+                            + Novo
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0">
@@ -208,7 +232,7 @@
     <!-- Firebase SDKs e Lógica -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ========================================================
@@ -238,13 +262,13 @@
 
         // Constantes de Tema
         const ALL_THEMES = [
-            'bg-gradient-to-br from-slate-100 via-white to-slate-100',
-            'bg-gradient-to-br from-amber-900 to-blue-950',
-            'bg-gradient-to-br from-amber-900 via-stone-800 to-stone-900',
-            'bg-gradient-to-br from-blue-600 to-indigo-800',
-            'bg-gradient-to-br from-green-500 to-green-800',
-            'bg-gradient-to-br from-slate-800 via-indigo-900 to-slate-900'
-        ];
+            'bg-gradient-to-br', 'from-slate-100', 'via-white', 'to-slate-100',
+            'from-amber-900', 'to-blue-950',
+            'via-stone-800', 'to-stone-900',
+            'from-blue-600', 'to-indigo-800',
+            'from-green-500', 'to-green-800',
+            'from-slate-800', 'via-indigo-900', 'to-slate-900'
+        ]; // Desmembrado para remover do tailwind mais fácil
 
         // Componentes da UI
         const authContainer = document.getElementById('auth-container');
@@ -307,6 +331,18 @@
                 } else {
                     window.showToast("Erro ao criar conta: " + error.message, true);
                 }
+            }
+        };
+
+        window.doGoogleLogin = async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                window.showToast("A abrir Google...");
+                await signInWithPopup(auth, provider);
+                window.showToast("Login efetuado com sucesso!");
+            } catch (error) {
+                console.error(error);
+                window.showToast("Erro ao entrar com Google: " + error.message, true);
             }
         };
 
@@ -437,11 +473,22 @@
             document.body.classList.remove('font-sans', 'font-inter', 'font-poppins', 'font-roboto', 'font-montserrat');
             document.body.classList.add(s.font);
             
-            ALL_THEMES.forEach(t => document.body.classList.remove(...t.split(' ')));
+            ALL_THEMES.forEach(t => document.body.classList.remove(t));
             document.body.classList.add(...s.appTheme.split(' '));
 
             document.getElementById('font-selector').value = s.font;
-            document.getElementById('theme-selector').value = s.appTheme;
+            
+            // Garantir que a select reflete se o tema existir na UI
+            let themeFound = false;
+            Array.from(document.getElementById('theme-selector').options).forEach(opt => {
+                if (opt.value === s.appTheme) themeFound = true;
+            });
+            if (themeFound) {
+                document.getElementById('theme-selector').value = s.appTheme;
+            } else {
+                document.getElementById('theme-selector').value = 'bg-gradient-to-br from-slate-100 via-white to-slate-100';
+            }
+            
             document.getElementById('btn-font-selector').value = s.btnFont;
             document.getElementById('btn-shape-selector').value = s.btnShape;
             document.getElementById('btn-size-selector').value = s.btnTextSize;
@@ -492,6 +539,38 @@
             window.persistAll();
             window.applyWorkspaceToUI();
             window.showToast("Projeto criado com sucesso!");
+        };
+
+        window.renameProject = () => {
+            const currentProj = window.workspace.projects[window.workspace.currentProject];
+            const newName = prompt("Renomear Projeto:", currentProj.name);
+            
+            if(newName && newName.trim() !== "") {
+                currentProj.name = newName.trim();
+                window.persistAll();
+                window.applyWorkspaceToUI();
+                window.showToast("Projeto renomeado com sucesso!");
+            }
+        };
+
+        window.deleteProject = () => {
+            const projectKeys = Object.keys(window.workspace.projects);
+            if(projectKeys.length <= 1) {
+                return window.showToast("Atenção: Não pode excluir o seu único projeto!", true);
+            }
+
+            const currentProj = window.workspace.projects[window.workspace.currentProject];
+            if(confirm(`Tem a certeza que deseja EXCLUIR o projeto "${currentProj.name}"?\nTodas as 12 mensagens serão perdidas e a ação não pode ser desfeita.`)) {
+                
+                delete window.workspace.projects[window.workspace.currentProject];
+                
+                // Mudar para o primeiro projeto que sobrou na lista
+                window.workspace.currentProject = Object.keys(window.workspace.projects)[0];
+                
+                window.persistAll();
+                window.applyWorkspaceToUI();
+                window.showToast("Projeto excluído com sucesso!");
+            }
         };
 
         // ========================================================
