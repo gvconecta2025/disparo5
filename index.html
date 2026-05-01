@@ -660,24 +660,45 @@
             window.showToast("Link copiado com sucesso!");
         };
 
+        // Geração dinâmica de cores exclusivas para cada bloco
+        window.getBadgeColor = (id) => {
+            const colors = [
+                'bg-slate-100 text-slate-700 border-slate-200',
+                'bg-red-100 text-red-700 border-red-200',
+                'bg-orange-100 text-orange-700 border-orange-200',
+                'bg-amber-100 text-amber-700 border-amber-200',
+                'bg-lime-100 text-lime-700 border-lime-200',
+                'bg-green-100 text-green-700 border-green-200',
+                'bg-emerald-100 text-emerald-700 border-emerald-200',
+                'bg-teal-100 text-teal-700 border-teal-200',
+                'bg-cyan-100 text-cyan-700 border-cyan-200',
+                'bg-sky-100 text-sky-700 border-sky-200',
+                'bg-blue-100 text-blue-700 border-blue-200',
+                'bg-indigo-100 text-indigo-700 border-indigo-200',
+                'bg-purple-100 text-purple-700 border-purple-200'
+            ];
+            return colors[id] || colors[0];
+        };
+
         const renderAllBricks = () => {
             const container = document.getElementById('bricks-container');
             container.innerHTML = '';
             Object.keys(window.templates).forEach(id => {
+                const badgeColorClass = window.getBadgeColor(id);
                 const brick = document.createElement('div');
                 brick.className = "bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all hover:shadow-md flex flex-col h-full";
                 brick.innerHTML = `
                     <!-- Cabeçalho do Bloco -->
-                    <div class="flex items-center justify-between mb-2.5">
-                        <div class="flex items-center gap-2 flex-1">
-                            <span class="bg-slate-100 text-slate-500 w-6 h-6 flex items-center justify-center rounded font-black text-[9px] shrink-0">${id}</span>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3 flex-1">
+                            <span class="${badgeColorClass} w-10 h-10 border flex items-center justify-center rounded-md font-black text-xl shrink-0 shadow-sm transition-all">${id}</span>
                             <input type="text" value="${window.templates[id].title}" 
                                 oninput="window.templates[${id}].title = this.value; persistAll()"
-                                class="text-xs font-bold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-green-500 outline-none w-full py-0.5 transition-colors"
+                                class="text-sm font-bold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-green-500 outline-none w-full py-0.5 transition-colors"
                                 placeholder="Nome do Modelo ${id}">
                         </div>
                         <button onclick="copyMessageText(${id})" class="ml-2 p-1.5 text-slate-400 hover:text-sky-500 hover:bg-sky-50 rounded transition-colors shrink-0" title="Copiar Texto da Mensagem">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                         </button>
                     </div>
 
