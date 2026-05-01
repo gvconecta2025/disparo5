@@ -22,7 +22,7 @@
         .font-montserrat { font-family: 'Montserrat', sans-serif; }
     </style>
 </head>
-<body class="bg-[#f8fafc] min-h-screen flex flex-col items-center p-3 md:p-6 font-sans transition-all duration-300">
+<body class="bg-gradient-to-br from-slate-100 via-white to-slate-100 min-h-screen flex flex-col items-center p-3 md:p-6 font-sans transition-all duration-500">
 
     <!-- CABEÇALHO (Compactado) -->
     <header class="w-full max-w-[1600px] flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-slate-200/60">
@@ -69,12 +69,12 @@
             <div>
                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Tema de Fundo:</label>
                 <select id="theme-selector" onchange="changeTheme(this.value)" class="w-full p-1.5 bg-white border border-slate-200 rounded text-xs text-slate-700 outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
-                    <option value="bg-[#f8fafc]">Claro (Padrão)</option>
-                    <option value="bg-slate-800">Escuro (Dark)</option>
-                    <option value="bg-blue-100">Azul Suave</option>
-                    <option value="bg-emerald-100">Verde Menta</option>
-                    <option value="bg-amber-100">Amarelo Areia</option>
-                    <option value="bg-rose-100">Rosa Claro</option>
+                    <option value="bg-gradient-to-br from-slate-100 via-white to-slate-100">Claro Perolado</option>
+                    <option value="bg-gradient-to-br from-amber-900 to-blue-950">Escuro (Marrom e Marinho)</option>
+                    <option value="bg-gradient-to-br from-amber-900 via-stone-800 to-stone-900">Café Expresso</option>
+                    <option value="bg-gradient-to-br from-blue-600 to-indigo-800">Azul Caneta</option>
+                    <option value="bg-gradient-to-br from-green-500 to-green-800">Verde Bandeira</option>
+                    <option value="bg-gradient-to-br from-slate-800 via-indigo-900 to-slate-900">Noturno Perolado</option>
                 </select>
             </div>
             <div>
@@ -173,9 +173,16 @@
         window.btnFont = 'font-sans';
         window.btnShape = 'rounded-lg';
         window.btnTextSize = 'text-[10px]';
-        window.appTheme = 'bg-[#f8fafc]'; // Default theme
+        window.appTheme = 'bg-gradient-to-br from-slate-100 via-white to-slate-100'; // Default theme
 
-        const ALL_THEMES = ['bg-[#f8fafc]', 'bg-slate-800', 'bg-blue-100', 'bg-emerald-100', 'bg-amber-100', 'bg-rose-100'];
+        const ALL_THEMES = [
+            'bg-gradient-to-br from-slate-100 via-white to-slate-100',
+            'bg-gradient-to-br from-amber-900 to-blue-950',
+            'bg-gradient-to-br from-amber-900 via-stone-800 to-stone-900',
+            'bg-gradient-to-br from-blue-600 to-indigo-800',
+            'bg-gradient-to-br from-green-500 to-green-800',
+            'bg-gradient-to-br from-slate-800 via-indigo-900 to-slate-900'
+        ];
 
         // Geração dos 12 Modelos Disponíveis
         window.templates = {};
@@ -215,8 +222,12 @@
         };
 
         window.applyTheme = (themeClass) => {
-            document.body.classList.remove(...ALL_THEMES);
-            document.body.classList.add(themeClass);
+            // Remove todas as classes de temas possíveis
+            ALL_THEMES.forEach(t => {
+                document.body.classList.remove(...t.split(' '));
+            });
+            // Adiciona a classe do novo tema (separando por espaços se for gradient)
+            document.body.classList.add(...themeClass.split(' '));
             document.getElementById('theme-selector').value = themeClass;
         };
 
@@ -579,13 +590,22 @@
                     window.btnFont = data.btnFont || 'font-sans';
                     window.btnShape = data.btnShape || 'rounded-lg';
                     window.btnTextSize = data.btnTextSize || 'text-[10px]';
-                    window.appTheme = data.appTheme || 'bg-[#f8fafc]';
+                    
+                    // Default para um tema que usa as novas cores gradientes
+                    window.appTheme = data.appTheme || 'bg-gradient-to-br from-slate-100 via-white to-slate-100';
                     
                     window.applyFont(window.appFont);
                     window.applyTheme(window.appTheme);
                     document.getElementById('btn-font-selector').value = window.btnFont;
                     document.getElementById('btn-shape-selector').value = window.btnShape;
                     document.getElementById('btn-size-selector').value = window.btnTextSize;
+                    
+                    // Verifica se o tema atual salvo está na lista dos novos, caso contrário aplica o padrão novo
+                    if (!ALL_THEMES.includes(window.appTheme)) {
+                        window.changeTheme('bg-gradient-to-br from-slate-100 via-white to-slate-100');
+                    } else {
+                        document.getElementById('theme-selector').value = window.appTheme;
+                    }
                     
                     window.updateStaticButtons();
                     
