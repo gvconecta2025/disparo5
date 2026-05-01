@@ -24,14 +24,15 @@
 </head>
 <body class="bg-[#f8fafc] min-h-screen flex flex-col items-center p-4 md:p-8 font-sans transition-all duration-300">
 
-    <header class="w-full max-w-4xl flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60 mt-4">
+    <!-- CABEÇALHO (Largura Total Limitada a 1600px para ecrãs gigantes não quebrarem) -->
+    <header class="w-full max-w-[1600px] flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60 mt-4">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 bg-green-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-green-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
             <div>
                 <h1 class="text-md font-black text-slate-800 leading-none">DisparoFive</h1>
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Controlo de Vendas Cloud</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Painel de Controlo • 12 Blocos</p>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -46,8 +47,8 @@
         </div>
     </header>
 
-    <!-- PAINEL DE CONFIGURAÇÕES (Oculto por padrão) -->
-    <section id="settings-panel" class="hidden w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 transition-all">
+    <!-- PAINEL DE CONFIGURAÇÕES -->
+    <section id="settings-panel" class="hidden w-full max-w-[1600px] mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 transition-all">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Configurações de Aparência</h2>
             <button onclick="toggleSettings()" class="text-slate-400 hover:text-slate-600">
@@ -97,7 +98,7 @@
     </section>
 
     <!-- GERADOR RÁPIDO DE LINK -->
-    <section class="w-full max-w-4xl mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col md:flex-row gap-4 items-end">
+    <section class="w-full max-w-[1600px] mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col md:flex-row gap-4 items-end">
         <div class="w-full md:w-1/3">
             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 flex items-center justify-between">
                 <span>Gerador Rápido</span>
@@ -119,15 +120,17 @@
         </div>
     </section>
 
-    <main id="bricks-container" class="w-full max-w-4xl">
-        <!-- Tijolos dinâmicos -->
+    <!-- GRID PRINCIPAL (12 BLOCOS EM 3 COLUNAS) -->
+    <!-- Aqui usamos lg:grid-cols-3 para forçar 3 colunas em telas grandes -->
+    <main id="bricks-container" class="w-full max-w-[1600px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Tijolos dinâmicos renderizados via JS -->
     </main>
 
-    <footer class="mt-4 pb-10 text-center opacity-40">
+    <footer class="mt-8 pb-10 text-center opacity-40">
         <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Produção • Vercel + Firebase</p>
     </footer>
 
-    <!-- Firebase SDKs e Lógica no fim para não bloquear o render da página -->
+    <!-- Firebase SDKs e Lógica -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -161,9 +164,9 @@
         window.btnShape = 'rounded-xl';
         window.btnTextSize = 'text-[10px]';
 
-        // 10 Modelos Disponíveis
+        // Geração dos 12 Modelos Disponíveis
         window.templates = {};
-        for(let i = 1; i <= 10; i++) {
+        for(let i = 1; i <= 12; i++) {
             window.templates[i] = { title: `Modelo ${i}`, msg: "", num: "", ddd: "33" };
         }
 
@@ -176,7 +179,7 @@
             
             const toast = document.createElement('div');
             toast.id = 'custom-toast';
-            toast.className = `fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-2xl font-bold text-sm text-white z-50 transition-all transform animate-bounce ${isError ? 'bg-red-500' : 'bg-slate-800'}`;
+            toast.className = `fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-2xl font-bold text-sm text-white z-50 transition-all transform animate-bounce ${isError ? 'bg-red-500' : 'bg-slate-800'} z-[9999]`;
             toast.innerText = msg;
             document.body.appendChild(toast);
             
@@ -264,7 +267,7 @@
             window.showToast("Texto da mensagem copiado!");
         };
 
-        // Função Global para sincronizar números em TODOS os 10 blocos
+        // Função Global para sincronizar números em TODOS os 12 blocos
         window.syncAllPhones = (newDdd, newNum) => {
             Object.keys(window.templates).forEach(i => {
                 window.templates[i].ddd = newDdd;
@@ -282,7 +285,7 @@
         // ========================================================
         window.handleDddInput = (id) => {
             let val = document.getElementById(`ddd-${id}`).value;
-            // Clonar o novo DDD e o número existente em todos os campos
+            // Clonar o novo DDD em todos os campos
             window.syncAllPhones(val, window.templates[id].num);
         };
 
@@ -314,7 +317,7 @@
                 }
             }
             
-            // Clona automaticamente para os 10 blocos!
+            // Clona automaticamente para os 12 blocos!
             window.syncAllPhones(finalDdd, finalNum);
         };
 
@@ -327,7 +330,6 @@
 
             if (digits.length === 8) {
                 finalNum = '9' + digits;
-                // Clona automaticamente para os 10 blocos!
                 window.syncAllPhones(finalDdd, finalNum);
             }
         };
@@ -357,7 +359,7 @@
                             numEl.value = match[0];
                             window.handlePhoneInput(id);
                             window.handlePhoneBlur(id);
-                            window.showToast("Número extraído com sucesso!");
+                            window.showToast("Número extraído e clonado com sucesso!");
                         } else {
                             let digits = text.replace(/\D/g, '');
                             if (digits.startsWith('55') && digits.length >= 12) digits = digits.substring(2);
@@ -366,7 +368,7 @@
                                 numEl.value = digits;
                                 window.handlePhoneInput(id);
                                 window.handlePhoneBlur(id);
-                                window.showToast("Número extraído com sucesso!");
+                                window.showToast("Número extraído e clonado com sucesso!");
                             } else {
                                 numEl.value = originalValue;
                                 window.showToast("Nenhum número claro encontrado.", true);
@@ -538,9 +540,9 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // Mergir templates com a garantia de termos os 10
+                    // Mergir templates com a garantia de termos os 12
                     let loadedTemplates = data.templates || {};
-                    for(let i = 1; i <= 10; i++) {
+                    for(let i = 1; i <= 12; i++) {
                         if(!loadedTemplates[i]) {
                             loadedTemplates[i] = { title: `Modelo ${i}`, msg: "", num: "", ddd: "33" };
                         }
@@ -648,7 +650,7 @@
 
             const btn = document.getElementById(`btn-copy-${id}`);
             const originalText = btn.innerText;
-            btn.innerText = "LINK COPIADO!";
+            btn.innerText = "COPIADO!";
             btn.classList.add('text-sky-600', 'border-sky-400');
             
             setTimeout(() => {
@@ -664,60 +666,54 @@
             container.innerHTML = '';
             Object.keys(window.templates).forEach(id => {
                 const brick = document.createElement('div');
-                brick.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 transition-all hover:shadow-md";
+                // Mudança Crítica: flex-col e h-full para empilhar itens e manter altura igual no Grid
+                brick.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md flex flex-col h-full";
                 brick.innerHTML = `
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                        <div class="lg:col-span-7 space-y-3">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center gap-3 flex-1">
-                                    <span class="bg-slate-100 text-slate-500 w-7 h-7 flex items-center justify-center rounded-lg font-black text-[10px] shrink-0">${id}</span>
-                                    <input type="text" value="${window.templates[id].title}" 
-                                        oninput="window.templates[${id}].title = this.value; persistAll()"
-                                        class="text-sm font-bold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-green-500 outline-none w-full py-1 transition-colors"
-                                        placeholder="Nome do Modelo ${id}">
-                                </div>
-                                <button onclick="copyMessageText(${id})" class="ml-3 p-2 text-slate-400 hover:text-sky-500 hover:bg-sky-50 rounded-lg transition-colors shrink-0" title="Copiar Texto da Mensagem">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                </button>
-                            </div>
-                            <textarea id="textarea-${id}"
-                                oninput="window.templates[${id}].msg = this.value; persistAll()"
-                                class="w-full h-64 p-4 bg-slate-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-green-400 outline-none text-gray-700 text-sm leading-relaxed resize-none transition-colors"
-                                placeholder="Cole o texto aqui...">${window.templates[id].msg}</textarea>
+                    <!-- Cabeçalho do Bloco -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3 flex-1">
+                            <span class="bg-slate-100 text-slate-500 w-7 h-7 flex items-center justify-center rounded-lg font-black text-[10px] shrink-0">${id}</span>
+                            <input type="text" value="${window.templates[id].title}" 
+                                oninput="window.templates[${id}].title = this.value; persistAll()"
+                                class="text-sm font-bold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-green-500 outline-none w-full py-1 transition-colors"
+                                placeholder="Nome do Modelo ${id}">
                         </div>
-                        <div class="lg:col-span-5 flex flex-col h-full justify-between pt-10">
-                            <div class="space-y-4">
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block flex items-center justify-between">
-                                        <span>Número do WhatsApp</span>
-                                        <span class="text-[8px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                            Lê Prints!
-                                        </span>
-                                    </label>
-                                    <div class="flex gap-2">
-                                        <input type="number" id="ddd-${id}" value="${window.templates[id].ddd}" 
-                                            oninput="window.handleDddInput(${id})"
-                                            class="w-16 p-3 bg-slate-50 border border-gray-100 rounded-xl text-center font-bold text-gray-600 focus:ring-2 focus:ring-green-400 outline-none transition-colors">
-                                        <input type="text" id="num-${id}" value="${window.templates[id].num}" 
-                                            oninput="window.handlePhoneInput(${id})"
-                                            onblur="window.handlePhoneBlur(${id})"
-                                            onpaste="window.handlePhonePaste(event, ${id})"
-                                            class="flex-1 p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-lg focus:ring-2 focus:ring-green-400 outline-none transition-colors placeholder:text-slate-300" 
-                                            placeholder="Digite ou Cole Print">
-                                    </div>
-                                </div>
-                                <div class="space-y-2">
-                                    <button onclick="disparar(${id}, 'app')" 
-                                        class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-4 ${window.btnShape} ${window.btnFont} shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase ${window.btnTextSize} tracking-widest">
-                                        WhatsApp App
-                                    </button>
-                                    <button id="btn-copy-${id}" onclick="copiar(${id})" 
-                                        class="w-full border-2 border-slate-200 hover:border-sky-400 hover:text-sky-600 text-slate-400 font-black py-3 ${window.btnShape} ${window.btnFont} transition-all active:scale-95 uppercase ${window.btnTextSize} tracking-widest">
-                                        Copiar Link
-                                    </button>
-                                </div>
-                            </div>
+                        <button onclick="copyMessageText(${id})" class="ml-2 p-2 text-slate-400 hover:text-sky-500 hover:bg-sky-50 rounded-lg transition-colors shrink-0" title="Copiar Texto da Mensagem">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Caixa de Texto -->
+                    <textarea id="textarea-${id}"
+                        oninput="window.templates[${id}].msg = this.value; persistAll()"
+                        class="w-full h-48 p-4 bg-slate-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-green-400 outline-none text-gray-700 text-sm leading-relaxed resize-none transition-colors mb-5"
+                        placeholder="Cole o texto aqui...">${window.templates[id].msg}</textarea>
+                    
+                    <!-- Controlos (Empurrados para o fundo) -->
+                    <div class="mt-auto space-y-3 pt-4 border-t border-slate-50">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block flex items-center justify-between">
+                            <span>WhatsApp</span>
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="number" id="ddd-${id}" value="${window.templates[id].ddd}" 
+                                oninput="window.handleDddInput(${id})"
+                                class="w-16 p-3 bg-slate-50 border border-gray-100 rounded-xl text-center font-bold text-gray-600 focus:ring-2 focus:ring-green-400 outline-none transition-colors">
+                            <input type="text" id="num-${id}" value="${window.templates[id].num}" 
+                                oninput="window.handlePhoneInput(${id})"
+                                onblur="window.handlePhoneBlur(${id})"
+                                onpaste="window.handlePhonePaste(event, ${id})"
+                                class="flex-1 p-3 bg-slate-50 border border-gray-100 rounded-xl font-mono text-base focus:ring-2 focus:ring-green-400 outline-none transition-colors placeholder:text-slate-300" 
+                                placeholder="Digite ou Cole">
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button onclick="disparar(${id}, 'app')" 
+                                class="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-4 ${window.btnShape} ${window.btnFont} shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase ${window.btnTextSize} tracking-widest">
+                                Abrir App
+                            </button>
+                            <button id="btn-copy-${id}" onclick="copiar(${id})" 
+                                class="flex-1 border-2 border-slate-200 hover:border-sky-400 hover:text-sky-600 text-slate-400 font-black py-3 ${window.btnShape} ${window.btnFont} transition-all active:scale-95 uppercase ${window.btnTextSize} tracking-widest">
+                                Copiar Link
+                            </button>
                         </div>
                     </div>
                 `;
