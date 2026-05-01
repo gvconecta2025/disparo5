@@ -55,7 +55,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
             <div>
                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Fonte do App:</label>
                 <select id="font-selector" onchange="changeFont(this.value)" class="w-full p-1.5 bg-white border border-slate-200 rounded text-xs text-slate-700 outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
@@ -64,6 +64,17 @@
                     <option value="font-inter">Inter (Profissional)</option>
                     <option value="font-montserrat">Montserrat (Elegante)</option>
                     <option value="font-roboto">Roboto (Clássica)</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Tema de Fundo:</label>
+                <select id="theme-selector" onchange="changeTheme(this.value)" class="w-full p-1.5 bg-white border border-slate-200 rounded text-xs text-slate-700 outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
+                    <option value="bg-[#f8fafc]">Claro (Padrão)</option>
+                    <option value="bg-slate-800">Escuro (Dark)</option>
+                    <option value="bg-blue-100">Azul Suave</option>
+                    <option value="bg-emerald-100">Verde Menta</option>
+                    <option value="bg-amber-100">Amarelo Areia</option>
+                    <option value="bg-rose-100">Rosa Claro</option>
                 </select>
             </div>
             <div>
@@ -162,6 +173,9 @@
         window.btnFont = 'font-sans';
         window.btnShape = 'rounded-lg';
         window.btnTextSize = 'text-[10px]';
+        window.appTheme = 'bg-[#f8fafc]'; // Default theme
+
+        const ALL_THEMES = ['bg-[#f8fafc]', 'bg-slate-800', 'bg-blue-100', 'bg-emerald-100', 'bg-amber-100', 'bg-rose-100'];
 
         // Geração dos 12 Modelos Disponíveis
         window.templates = {};
@@ -200,11 +214,24 @@
             document.getElementById('font-selector').value = fontClass;
         };
 
+        window.applyTheme = (themeClass) => {
+            document.body.classList.remove(...ALL_THEMES);
+            document.body.classList.add(themeClass);
+            document.getElementById('theme-selector').value = themeClass;
+        };
+
         window.changeFont = (fontClass) => {
             window.appFont = fontClass;
             window.applyFont(fontClass);
             window.persistAll(); 
             window.showToast("Fonte da aplicação atualizada!");
+        };
+
+        window.changeTheme = (themeClass) => {
+            window.appTheme = themeClass;
+            window.applyTheme(themeClass);
+            window.persistAll();
+            window.showToast("Tema de fundo atualizado!");
         };
 
         window.changeBtnFont = (fontClass) => {
@@ -552,11 +579,14 @@
                     window.btnFont = data.btnFont || 'font-sans';
                     window.btnShape = data.btnShape || 'rounded-lg';
                     window.btnTextSize = data.btnTextSize || 'text-[10px]';
+                    window.appTheme = data.appTheme || 'bg-[#f8fafc]';
                     
                     window.applyFont(window.appFont);
+                    window.applyTheme(window.appTheme);
                     document.getElementById('btn-font-selector').value = window.btnFont;
                     document.getElementById('btn-shape-selector').value = window.btnShape;
                     document.getElementById('btn-size-selector').value = window.btnTextSize;
+                    
                     window.updateStaticButtons();
                     
                     if (isFirstLoad) {
@@ -593,6 +623,7 @@
                         btnFont: window.btnFont,
                         btnShape: window.btnShape,
                         btnTextSize: window.btnTextSize,
+                        appTheme: window.appTheme,
                         lastUpdated: new Date() 
                     }, { merge: true });
                     statusText.innerText = "Sincronizado";
@@ -698,7 +729,7 @@
                                 placeholder="Nome do Modelo ${id}">
                         </div>
                         <button onclick="copyMessageText(${id})" class="ml-2 p-1.5 text-slate-400 hover:text-sky-500 hover:bg-sky-50 rounded transition-colors shrink-0" title="Copiar Texto da Mensagem">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 00-2-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                         </button>
                     </div>
 
